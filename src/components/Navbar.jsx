@@ -1,9 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-// ==============================
-// شريط التنقل العلوي
-// ==============================
 function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -13,7 +10,6 @@ function Navbar() {
     navigate('/')
   }
 
-  // رابط الداشبورد حسب الدور
   const getDashboardLink = () => {
     if (!user) return '/login'
     if (user.role === 'admin')   return '/admin/dashboard'
@@ -25,13 +21,11 @@ function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
       <div className="container">
-        {/* اللوقو */}
         <Link className="navbar-brand fw-bold fs-4 text-primary" to="/">
           <i className="bi bi-house-heart-fill me-2"></i>
           Dormify
         </Link>
 
-        {/* زر القائمة للموبايل */}
         <button
           className="navbar-toggler"
           type="button"
@@ -41,7 +35,6 @@ function Navbar() {
           <span className="navbar-toggler-icon"></span>
         </button>
 
-        {/* محتوى النافبار */}
         <div className="collapse navbar-collapse" id="navbarContent">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
             <li className="nav-item">
@@ -58,7 +51,6 @@ function Navbar() {
             </li>
           </ul>
 
-          {/* أزرار تسجيل الدخول أو معلومات المستخدم */}
           <div className="d-flex align-items-center gap-2">
             {user ? (
               <>

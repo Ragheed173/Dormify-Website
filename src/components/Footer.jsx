@@ -1,14 +1,10 @@
 import { Link } from 'react-router-dom'
 
-// ==============================
-// الفوتر
-// ==============================
 function Footer() {
   return (
     <footer className="bg-dark text-white pt-5 pb-3 mt-5">
       <div className="container">
         <div className="row g-4">
-          {/* اللوقو والوصف */}
           <div className="col-lg-4">
             <h5 className="fw-bold text-primary mb-3">
               <i className="bi bi-house-heart-fill me-2"></i>Dormify
@@ -17,7 +13,6 @@ function Footer() {
               The smart platform that connects university students with verified housing.
               Find your perfect home away from home.
             </p>
-            {/* أيقونات السوشيال ميديا */}
             <div className="d-flex gap-3 mt-3">
               {['facebook', 'twitter', 'instagram', 'linkedin'].map((s) => (
                 <a key={s} href="#" className="text-secondary fs-5 hover-white">
@@ -27,7 +22,6 @@ function Footer() {
             </div>
           </div>
 
-          {/* روابط سريعة */}
           <div className="col-6 col-lg-2">
             <h6 className="fw-bold mb-3">Quick Links</h6>
             <ul className="list-unstyled">
@@ -46,7 +40,6 @@ function Footer() {
             </ul>
           </div>
 
-          {/* الشركة */}
           <div className="col-6 col-lg-2">
             <h6 className="fw-bold mb-3">Company</h6>
             <ul className="list-unstyled">
@@ -60,7 +53,6 @@ function Footer() {
             </ul>
           </div>
 
-          {/* تواصل معنا */}
           <div className="col-lg-4">
             <h6 className="fw-bold mb-3">Contact Us</h6>
             <p className="text-secondary small mb-1">

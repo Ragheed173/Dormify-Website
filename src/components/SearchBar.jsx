@@ -1,9 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-// ==============================
-// شريط البحث الرئيسي
-// ==============================
 function SearchBar({ onSearch, compact = false }) {
   const navigate = useNavigate()
   const [filters, setFilters] = useState({
@@ -20,7 +17,6 @@ function SearchBar({ onSearch, compact = false }) {
     if (onSearch) {
       onSearch(filters)
     } else {
-      // إذا على الهوم بيج → ينتقل لصفحة الليستينق
       navigate('/listings')
     }
   }
@@ -28,7 +24,6 @@ function SearchBar({ onSearch, compact = false }) {
   return (
     <div className={`bg-white rounded-3 shadow p-${compact ? '2' : '3'}`}>
       <div className="row g-2 align-items-center">
-        {/* المدينة */}
         <div className="col-12 col-md">
           <select
             name="city"
@@ -46,7 +41,6 @@ function SearchBar({ onSearch, compact = false }) {
           </select>
         </div>
 
-        {/* نوع السكن */}
         <div className="col-12 col-md">
           <select
             name="type"
@@ -63,7 +57,6 @@ function SearchBar({ onSearch, compact = false }) {
           </select>
         </div>
 
-        {/* نطاق السعر */}
         <div className="col-12 col-md">
           <select
             name="priceRange"
@@ -79,7 +72,6 @@ function SearchBar({ onSearch, compact = false }) {
           </select>
         </div>
 
-        {/* زر البحث */}
         <div className="col-12 col-md-auto">
           <button
             className={`btn btn-primary w-100 ${compact ? '' : 'px-4'}`}

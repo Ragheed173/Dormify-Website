@@ -4,9 +4,6 @@ import Footer from '../components/Footer'
 import HousingCard from '../components/HousingCard'
 import { mockHousings } from '../api/mockData'
 
-// ==============================
-// صفحة قائمة السكنات مع الفلتر
-// ==============================
 function ListingsPage() {
   const [housings, setHousings] = useState([])
   const [filtered, setFiltered] = useState([])
@@ -19,13 +16,11 @@ function ListingsPage() {
     search: '',
   })
 
-  // جلب البيانات (استبدل بـ API call لاحقاً)
   useEffect(() => {
     setHousings(mockHousings)
     setFiltered(mockHousings)
   }, [])
 
-  // تطبيق الفلاتر
   useEffect(() => {
     let result = [...housings]
 
@@ -55,7 +50,6 @@ function ListingsPage() {
     <>
       <Navbar />
 
-      {/* شريط العنوان */}
       <div className="bg-primary text-white py-4">
         <div className="container">
           <h2 className="fw-bold mb-1">Available Housing Units</h2>
@@ -64,7 +58,6 @@ function ListingsPage() {
       </div>
 
       <div className="container py-4">
-        {/* شريط البحث */}
         <div className="mb-4">
           <div className="input-group shadow-sm">
             <span className="input-group-text bg-white border-end-0">
@@ -82,7 +75,6 @@ function ListingsPage() {
         </div>
 
         <div className="row g-4">
-          {/* ===== SIDEBAR FILTERS ===== */}
           <div className="col-12 col-lg-3">
             <div className="card border-0 shadow-sm p-3">
               <div className="d-flex justify-content-between align-items-center mb-3">
@@ -90,7 +82,6 @@ function ListingsPage() {
                 <button className="btn btn-link btn-sm text-danger p-0" onClick={resetFilters}>Reset</button>
               </div>
 
-              {/* فلتر المدينة */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">City</label>
                 <select className="form-select form-select-sm" name="city" value={filters.city} onChange={handleChange}>
@@ -101,7 +92,6 @@ function ListingsPage() {
                 </select>
               </div>
 
-              {/* فلتر السعر */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">Price Range ($/night)</label>
                 <div className="row g-2">
@@ -116,7 +106,6 @@ function ListingsPage() {
                 </div>
               </div>
 
-              {/* فلتر عدد الغرف */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">Min. Rooms</label>
                 <select className="form-select form-select-sm" name="rooms" value={filters.rooms} onChange={handleChange}>
@@ -128,7 +117,6 @@ function ListingsPage() {
                 </select>
               </div>
 
-              {/* فلتر الواي فاي */}
               <div className="form-check">
                 <input className="form-check-input" type="checkbox" id="wifi"
                   name="wifi" checked={filters.wifi} onChange={handleChange} />
@@ -139,7 +127,6 @@ function ListingsPage() {
             </div>
           </div>
 
-          {/* ===== قائمة السكنات ===== */}
           <div className="col-12 col-lg-9">
             <div className="d-flex justify-content-between align-items-center mb-3">
               <span className="text-muted small">

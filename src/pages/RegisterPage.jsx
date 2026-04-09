@@ -2,9 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-// ==============================
-// صفحة إنشاء حساب جديد
-// ==============================
 function RegisterPage() {
   const { register } = useAuth()
   const navigate = useNavigate()
@@ -29,7 +26,6 @@ function RegisterPage() {
     if (Object.keys(errs).length) { setErrors(errs); return }
 
     setLoading(true)
-    // استبدل بـ api.post('/auth/register') عند ربط الباك ايند
     const result = register(form.name, form.email, form.password, form.role)
     if (result.success) {
       if (result.role === 'owner') navigate('/owner/dashboard')
@@ -51,7 +47,6 @@ function RegisterPage() {
         </div>
 
         <form onSubmit={handleSubmit} noValidate>
-          {/* الاسم */}
           <div className="mb-3">
             <label className="form-label fw-medium">Full Name</label>
             <input type="text" name="name" className={`form-control ${errors.name ? 'is-invalid' : ''}`}
@@ -59,7 +54,6 @@ function RegisterPage() {
             {errors.name && <div className="invalid-feedback">{errors.name}</div>}
           </div>
 
-          {/* الإيميل */}
           <div className="mb-3">
             <label className="form-label fw-medium">Email Address</label>
             <input type="email" name="email" className={`form-control ${errors.email ? 'is-invalid' : ''}`}
@@ -67,7 +61,6 @@ function RegisterPage() {
             {errors.email && <div className="invalid-feedback">{errors.email}</div>}
           </div>
 
-          {/* كلمة المرور */}
           <div className="mb-3">
             <label className="form-label fw-medium">Password</label>
             <input type="password" name="password" className={`form-control ${errors.password ? 'is-invalid' : ''}`}
@@ -75,7 +68,6 @@ function RegisterPage() {
             {errors.password && <div className="invalid-feedback">{errors.password}</div>}
           </div>
 
-          {/* تأكيد كلمة المرور */}
           <div className="mb-3">
             <label className="form-label fw-medium">Confirm Password</label>
             <input type="password" name="confirm" className={`form-control ${errors.confirm ? 'is-invalid' : ''}`}
@@ -83,7 +75,6 @@ function RegisterPage() {
             {errors.confirm && <div className="invalid-feedback">{errors.confirm}</div>}
           </div>
 
-          {/* الدور */}
           <div className="mb-4">
             <label className="form-label fw-medium">I am a...</label>
             <div className="row g-2">

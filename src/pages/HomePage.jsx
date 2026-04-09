@@ -6,26 +6,19 @@ import HousingCard from '../components/HousingCard'
 import SearchBar from '../components/SearchBar'
 import { mockHousings } from '../api/mockData'
 
-// ==============================
-// الصفحة الرئيسية - HomePage
-// ==============================
 function HomePage() {
   const [featuredHousings, setFeaturedHousings] = useState([])
 
-  // جلب السكنات المميزة (mock data)
-  // عند ربط الباك ايند استبدل بـ: api.get('/housings/featured')
   useEffect(() => {
     setFeaturedHousings(mockHousings.slice(0, 6))
   }, [])
 
-  // بيانات شهادات الطلاب
   const testimonials = [
     { name: 'Lina Hasan', university: 'Birzeit University', text: 'Dormify made finding housing so easy! I found my perfect apartment in just 2 days.', avatar: 'LH' },
     { name: 'Omar Khalil', university: 'An-Najah University', text: 'The best platform for student housing. Very organized and the support team is amazing!', avatar: 'OK' },
     { name: 'Sara Nasser', university: 'Hebron University', text: 'I love how I can filter exactly what I need. Found great housing within my budget!', avatar: 'SN' },
   ]
 
-  // خطوات "كيف يعمل"
   const steps = [
     { icon: 'bi-search', title: 'Search', desc: 'Browse thousands of verified student housing listings filtered by city, price, and type.', color: 'primary' },
     { icon: 'bi-calendar-check', title: 'Book', desc: 'Choose your perfect housing and confirm your booking with easy payment options.', color: 'success' },
@@ -36,7 +29,6 @@ function HomePage() {
     <>
       <Navbar />
 
-      {/* ===== HERO SECTION ===== */}
       <section
         className="hero-gradient text-white py-5"
         style={{ minHeight: '520px', display: 'flex', alignItems: 'center' }}
@@ -54,14 +46,12 @@ function HomePage() {
                 Thousands of verified housing options near your university.
                 Search, book, and move in — all in one place.
               </p>
-              {/* شريط البحث */}
               <SearchBar />
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== STATS SECTION ===== */}
       <section className="bg-white py-4 shadow-sm">
         <div className="container">
           <div className="row text-center g-3">
@@ -80,7 +70,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ===== FEATURED LISTINGS ===== */}
       <section className="py-5">
         <div className="container">
           <div className="d-flex justify-content-between align-items-center mb-4">
@@ -103,7 +92,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ===== HOW IT WORKS ===== */}
       <section className="py-5 bg-light" id="how-it-works">
         <div className="container">
           <div className="text-center mb-5">
@@ -126,7 +114,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
       <section className="py-5">
         <div className="container">
           <div className="text-center mb-5">
@@ -158,7 +145,6 @@ function HomePage() {
         </div>
       </section>
 
-      {/* ===== CTA SECTION ===== */}
       <section className="hero-gradient text-white py-5" id="about">
         <div className="container text-center">
           <h2 className="fw-bold mb-3">Are you a housing owner?</h2>

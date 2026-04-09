@@ -1,9 +1,5 @@
 import axios from 'axios'
 
-// ==============================
-// إعداد Axios للاتصال بالـ Backend
-// سيتم استخدام هذا الملف عند ربط Express.js + MongoDB
-// ==============================
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
   headers: {
@@ -11,7 +7,6 @@ const api = axios.create({
   },
 })
 
-// إضافة JWT Token لكل طلب تلقائياً
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
@@ -23,7 +18,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
-// التعامل مع أخطاء الاستجابة
 api.interceptors.response.use(
   (response) => response,
   (error) => {

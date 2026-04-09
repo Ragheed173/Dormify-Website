@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mockHousings, mockBookings, mockPayments, mockMaintenanceReports } from '../api/mockData'
 
-// ==============================
-// لوحة تحكم المالك
-// ==============================
 function OwnerDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -21,7 +18,6 @@ function OwnerDashboard() {
 
   const handleAddListing = (e) => {
     e.preventDefault()
-    // استبدل بـ api.post('/housings') عند ربط الباك ايند
     const newItem = {
       ...newListing,
       id: Date.now(),
@@ -63,7 +59,6 @@ function OwnerDashboard() {
   return (
     <div className="d-flex min-vh-100 bg-light">
 
-      {/* ===== SIDEBAR ===== */}
       <div className="bg-white shadow-sm d-flex flex-column"
         style={{ width: '250px', minWidth: '250px', padding: '24px 16px' }}>
         <div className="mb-4 px-2">
@@ -100,7 +95,6 @@ function OwnerDashboard() {
         </button>
       </div>
 
-      {/* ===== MAIN CONTENT ===== */}
       <div className="flex-grow-1 p-4" style={{ overflowY: 'auto' }}>
 
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -110,10 +104,8 @@ function OwnerDashboard() {
           </div>
         </div>
 
-        {/* ===== TAB: MY LISTINGS ===== */}
         {activeTab === 'listings' && (
           <>
-            {/* إحصائيات */}
             <div className="row g-3 mb-4">
               {[
                 { label: 'Total Listings',  value: listings.length,   icon: 'bi-houses',       color: 'primary' },
@@ -134,7 +126,6 @@ function OwnerDashboard() {
               ))}
             </div>
 
-            {/* زر إضافة + جدول */}
             <div className="card border-0 shadow-sm">
               <div className="card-header bg-white d-flex justify-content-between align-items-center">
                 <span className="fw-bold">My Properties</span>
@@ -180,7 +171,6 @@ function OwnerDashboard() {
           </>
         )}
 
-        {/* ===== TAB: BOOKINGS ===== */}
         {activeTab === 'bookings' && (
           <div className="card border-0 shadow-sm">
             <div className="card-body p-0">
@@ -211,7 +201,6 @@ function OwnerDashboard() {
           </div>
         )}
 
-        {/* ===== TAB: PAYMENTS ===== */}
         {activeTab === 'payments' && (
           <>
             <div className="row g-3 mb-4">
@@ -254,7 +243,6 @@ function OwnerDashboard() {
           </>
         )}
 
-        {/* ===== TAB: MAINTENANCE ===== */}
         {activeTab === 'maintenance' && (
           <div className="card border-0 shadow-sm">
             <div className="card-body p-0">
@@ -288,7 +276,6 @@ function OwnerDashboard() {
           </div>
         )}
 
-        {/* ===== TAB: SETTINGS ===== */}
         {activeTab === 'settings' && (
           <div className="card border-0 shadow-sm p-4" style={{ maxWidth: '500px' }}>
             <h6 className="fw-bold mb-4">Account Settings</h6>
@@ -311,7 +298,6 @@ function OwnerDashboard() {
         )}
       </div>
 
-      {/* ===== MODAL: Add New Listing ===== */}
       {showModal && (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-lg modal-dialog-centered">

@@ -4,9 +4,6 @@ import Navbar from '../components/Navbar'
 import { mockHousings } from '../api/mockData'
 import { useAuth } from '../context/AuthContext'
 
-// ==============================
-// صفحة تأكيد الحجز
-// ==============================
 function BookingConfirmationPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -25,7 +22,6 @@ function BookingConfirmationPage() {
     window.scrollTo(0, 0)
   }, [id])
 
-  // حساب السعر حسب نوع الغرفة
   const getRoomPrice = () => {
     if (!housing) return 0
     if (roomType === 'single') return housing.price * 0.6
@@ -40,7 +36,6 @@ function BookingConfirmationPage() {
 
   const handleConfirm = () => {
     setLoading(true)
-    // استبدل بـ api.post('/bookings') عند ربط الباك ايند
     setTimeout(() => {
       setLoading(false)
       setConfirmed(true)
@@ -54,7 +49,6 @@ function BookingConfirmationPage() {
     </div>
   )
 
-  // ===== شاشة النجاح =====
   if (confirmed) return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="text-center">
@@ -79,7 +73,6 @@ function BookingConfirmationPage() {
       <div className="container py-5">
         <div className="row g-4">
 
-          {/* ===== القسم الأيسر – تفاصيل السكن ===== */}
           <div className="col-lg-4">
             <div className="card border-0 shadow-sm p-3">
               <h6 className="fw-bold mb-3"><i className="bi bi-house-door me-2 text-primary"></i>Booking Details</h6>
@@ -110,12 +103,10 @@ function BookingConfirmationPage() {
             </div>
           </div>
 
-          {/* ===== القسم الأوسط – الغرفة والسعر ===== */}
           <div className="col-lg-4">
             <div className="card border-0 shadow-sm p-3">
               <h6 className="fw-bold mb-3"><i className="bi bi-calendar3 me-2 text-primary"></i>Room & Price</h6>
 
-              {/* اختيار نوع الغرفة */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">Room Type</label>
                 {[
@@ -138,7 +129,6 @@ function BookingConfirmationPage() {
                 ))}
               </div>
 
-              {/* عدد الليالي */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">Number of Nights</label>
                 <input
@@ -153,7 +143,6 @@ function BookingConfirmationPage() {
 
               <hr />
 
-              {/* تفصيل السعر */}
               <div className="d-flex justify-content-between small mb-1">
                 <span className="text-muted">${roomPrice.toFixed(0)} × {nights} night{nights > 1 ? 's' : ''}</span>
                 <span>${subtotal.toFixed(2)}</span>
@@ -169,19 +158,16 @@ function BookingConfirmationPage() {
             </div>
           </div>
 
-          {/* ===== القسم الأيمن – تأكيد الحجز ===== */}
           <div className="col-lg-4">
             <div className="card border-0 shadow-sm p-3">
               <h6 className="fw-bold mb-3"><i className="bi bi-check-circle me-2 text-primary"></i>Confirm Booking</h6>
 
-              {/* معلومات الطالب */}
               <div className="bg-light rounded-2 p-3 mb-3 small">
                 <p className="mb-1"><strong>Name:</strong> {user?.name}</p>
                 <p className="mb-1"><strong>Email:</strong> {user?.email}</p>
                 <p className="mb-0"><strong>Phone:</strong> +970 59 000 0000</p>
               </div>
 
-              {/* طريقة الدفع */}
               <div className="mb-3">
                 <label className="form-label small fw-medium">Payment Method</label>
                 {[
@@ -201,7 +187,6 @@ function BookingConfirmationPage() {
                 ))}
               </div>
 
-              {/* بيانات البطاقة (إذا اختار أونلاين) */}
               {paymentMethod === 'online' && (
                 <div className="mb-3">
                   <input type="text" className="form-control form-control-sm mb-2"
@@ -225,7 +210,6 @@ function BookingConfirmationPage() {
                 </div>
               )}
 
-              {/* زر التأكيد */}
               <button
                 className="btn btn-success w-100 py-2 fw-bold"
                 onClick={handleConfirm}

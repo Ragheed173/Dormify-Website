@@ -1,14 +1,10 @@
 import { useNavigate } from 'react-router-dom'
 
-// ==============================
-// كرت عرض السكن - يُستخدم في أكثر من صفحة
-// ==============================
 function HousingCard({ housing }) {
   const navigate = useNavigate()
 
   return (
     <div className="card h-100 shadow-sm border-0" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-      {/* صورة السكن */}
       <div style={{ position: 'relative' }}>
         <img
           src={housing.image}
@@ -16,7 +12,6 @@ function HousingCard({ housing }) {
           className="housing-card-img w-100"
           style={{ height: '200px', objectFit: 'cover' }}
         />
-        {/* باج السعر */}
         <span
           className="badge bg-primary position-absolute"
           style={{ bottom: '10px', right: '10px', fontSize: '13px', padding: '6px 10px' }}
@@ -26,14 +21,12 @@ function HousingCard({ housing }) {
       </div>
 
       <div className="card-body d-flex flex-column p-3">
-        {/* الاسم والمدينة */}
         <h6 className="card-title fw-bold mb-1">{housing.title}</h6>
         <p className="text-muted small mb-2">
           <i className="bi bi-geo-alt me-1"></i>
           {housing.city}, {housing.area}
         </p>
 
-        {/* باجات المميزات */}
         <div className="d-flex flex-wrap gap-1 mb-3">
           <span className="badge bg-light text-dark border">
             <i className="bi bi-door-open me-1"></i>{housing.rooms} Rooms
@@ -53,7 +46,6 @@ function HousingCard({ housing }) {
           )}
         </div>
 
-        {/* التقييم */}
         {housing.rating && (
           <div className="d-flex align-items-center gap-1 mb-2">
             <i className="bi bi-star-fill text-warning small"></i>
@@ -62,7 +54,6 @@ function HousingCard({ housing }) {
           </div>
         )}
 
-        {/* زر التفاصيل */}
         <button
           className="btn btn-primary btn-sm mt-auto"
           onClick={() => navigate(`/housing/${housing.id}`)}

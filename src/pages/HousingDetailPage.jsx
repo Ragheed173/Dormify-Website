@@ -5,9 +5,6 @@ import Footer from '../components/Footer'
 import { mockHousings } from '../api/mockData'
 import { useAuth } from '../context/AuthContext'
 
-// ==============================
-// صفحة تفاصيل السكن
-// ==============================
 function HousingDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -16,7 +13,6 @@ function HousingDetailPage() {
   const [activeImg, setActiveImg] = useState(0)
   const [selectedRoom, setSelectedRoom] = useState('single')
 
-  // جلب تفاصيل السكن (استبدل بـ api.get(`/housings/${id}`) لاحقاً)
   useEffect(() => {
     const found = mockHousings.find((h) => h.id === parseInt(id))
     setHousing(found)
@@ -57,22 +53,18 @@ function HousingDetailPage() {
       <Navbar />
 
       <div className="container py-5">
-        {/* زر الرجوع */}
         <button className="btn btn-outline-secondary btn-sm mb-4" onClick={() => navigate(-1)}>
           <i className="bi bi-arrow-left me-1"></i> Back to Listings
         </button>
 
         <div className="row g-4">
-          {/* ===== القسم الأيسر - الصور والتفاصيل ===== */}
           <div className="col-lg-8">
-            {/* الصورة الرئيسية */}
             <img
               src={housing.images[activeImg]}
               alt={housing.title}
               className="w-100 rounded-3 shadow-sm mb-2"
               style={{ height: '380px', objectFit: 'cover' }}
             />
-            {/* مصغرات الصور */}
             <div className="d-flex gap-2 mb-4">
               {housing.images.map((img, idx) => (
                 <img
@@ -86,7 +78,6 @@ function HousingDetailPage() {
               ))}
             </div>
 
-            {/* العنوان والتقييم */}
             <div className="d-flex justify-content-between align-items-start mb-2">
               <h2 className="fw-bold">{housing.title}</h2>
               <div className="text-warning fs-5">
@@ -102,11 +93,9 @@ function HousingDetailPage() {
 
             <hr />
 
-            {/* الوصف */}
             <h5 className="fw-bold mb-2">About this housing</h5>
             <p className="text-muted">{housing.description}</p>
 
-            {/* المميزات */}
             <h5 className="fw-bold mb-3 mt-4">Amenities</h5>
             <div className="row g-2">
               {amenities.map((a) => (
@@ -121,7 +110,6 @@ function HousingDetailPage() {
             </div>
           </div>
 
-          {/* ===== القسم الأيمن - الحجز ===== */}
           <div className="col-lg-4">
             <div className="card border-0 shadow p-4 sticky-top" style={{ top: '80px' }}>
               <h4 className="fw-bold text-primary mb-1">${housing.price}<small className="text-muted fs-6 fw-normal">/night</small></h4>
@@ -132,7 +120,6 @@ function HousingDetailPage() {
 
               <hr />
 
-              {/* اختيار نوع الغرفة */}
               <h6 className="fw-bold mb-2">Select Room Type</h6>
               {[
                 { value: 'single', label: 'Single Room', price: housing.price * 0.6 },
@@ -155,7 +142,6 @@ function HousingDetailPage() {
 
               <hr />
 
-              {/* زر الحجز */}
               <button className="btn btn-primary w-100 py-2 fw-bold" onClick={handleBookNow}>
                 <i className="bi bi-calendar-check me-2"></i>Book Now
               </button>
@@ -166,7 +152,6 @@ function HousingDetailPage() {
 
               <hr />
 
-              {/* معلومات المالك */}
               <div className="d-flex align-items-center gap-2">
                 <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
                   style={{ width: '40px', height: '40px', fontSize: '12px' }}>

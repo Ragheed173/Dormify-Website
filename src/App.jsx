@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
-
-// Pages
 import HomePage               from './pages/HomePage'
 import ListingsPage           from './pages/ListingsPage'
 import HousingDetailPage      from './pages/HousingDetailPage'
@@ -12,21 +10,16 @@ import StudentDashboard       from './pages/StudentDashboard'
 import OwnerDashboard         from './pages/OwnerDashboard'
 import AdminDashboard         from './pages/AdminDashboard'
 
-// ==============================
-// كل مسارات التطبيق
-// ==============================
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* صفحات عامة */}
         <Route path="/"           element={<HomePage />} />
         <Route path="/listings"   element={<ListingsPage />} />
         <Route path="/housing/:id" element={<HousingDetailPage />} />
         <Route path="/login"      element={<LoginPage />} />
         <Route path="/register"   element={<RegisterPage />} />
 
-        {/* صفحة تأكيد الحجز - للطالب فقط */}
         <Route
           path="/booking/confirm/:id"
           element={
@@ -36,7 +29,6 @@ function App() {
           }
         />
 
-        {/* داشبورد الطالب */}
         <Route
           path="/student/dashboard"
           element={
@@ -46,7 +38,6 @@ function App() {
           }
         />
 
-        {/* داشبورد المالك */}
         <Route
           path="/owner/dashboard"
           element={
@@ -56,7 +47,6 @@ function App() {
           }
         />
 
-        {/* داشبورد الأدمن */}
         <Route
           path="/admin/dashboard"
           element={
@@ -66,7 +56,6 @@ function App() {
           }
         />
 
-        {/* صفحة 404 */}
         <Route path="*" element={
           <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
             <h1 className="display-1 fw-bold text-primary">404</h1>

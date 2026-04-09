@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mockHousings, mockBookings, mockMaintenanceReports, mockUsers } from '../api/mockData'
 
-// ==============================
-// لوحة تحكم الأدمن
-// ==============================
 function AdminDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -24,7 +21,6 @@ function AdminDashboard() {
     return 'secondary'
   }
 
-  // بيانات مخططات المدن
   const cityStats = [
     { city: 'Ramallah', count: 145, pct: 42 },
     { city: 'Nablus',   count: 98,  pct: 28 },
@@ -32,14 +28,12 @@ function AdminDashboard() {
     { city: 'Jenin',    count: 37,  pct: 11 },
   ]
 
-  // طلبات سكن جديدة
   const newHousingRequests = [
     { id: 1, name: 'Mountain View Apartment', owner: 'Nour Salem',   city: 'Ramallah', date: '2024-04-18' },
     { id: 2, name: 'City Center Studio',      owner: 'Rami Hassan',  city: 'Nablus',   date: '2024-04-19' },
     { id: 3, name: 'Student Complex',         owner: 'Lara Khalil',  city: 'Hebron',   date: '2024-04-20' },
   ]
 
-  // فلتر المستخدمين
   const filteredUsers = mockUsers.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
                         u.email.toLowerCase().includes(userSearch.toLowerCase())
@@ -47,7 +41,6 @@ function AdminDashboard() {
     return matchSearch && matchRole
   })
 
-  // فلتر البلاغات
   const filteredReports = reportFilter
     ? mockMaintenanceReports.filter((r) => r.status === reportFilter)
     : mockMaintenanceReports
@@ -65,7 +58,6 @@ function AdminDashboard() {
   return (
     <div className="d-flex min-vh-100 bg-light">
 
-      {/* ===== SIDEBAR ===== */}
       <div className="bg-dark text-white d-flex flex-column"
         style={{ width: '260px', minWidth: '260px', padding: '24px 16px' }}>
         <div className="mb-4 px-2">
@@ -75,7 +67,6 @@ function AdminDashboard() {
           <small className="text-secondary">Admin Control Panel</small>
         </div>
 
-        {/* معلومات الأدمن */}
         <div className="d-flex align-items-center gap-2 bg-white bg-opacity-10 rounded-2 p-2 mb-4">
           <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
             style={{ width: '40px', height: '40px', fontSize: '12px', flexShrink: 0 }}>
@@ -108,7 +99,6 @@ function AdminDashboard() {
         </button>
       </div>
 
-      {/* ===== MAIN CONTENT ===== */}
       <div className="flex-grow-1 p-4" style={{ overflowY: 'auto' }}>
 
         <div className="mb-4">
@@ -116,10 +106,8 @@ function AdminDashboard() {
           <small className="text-muted">Dormify Admin Panel — Full Control</small>
         </div>
 
-        {/* ===== OVERVIEW ===== */}
         {activeTab === 'overview' && (
           <>
-            {/* بطاقات الإحصاء الكبيرة */}
             <div className="row g-3 mb-4">
               {[
                 { label: 'Total Users',      value: '1,240', icon: 'bi-people-fill',     color: 'primary', change: '+12%' },
@@ -145,7 +133,6 @@ function AdminDashboard() {
             </div>
 
             <div className="row g-4 mb-4">
-              {/* جدول الحجوزات الأخيرة */}
               <div className="col-lg-7">
                 <div className="card border-0 shadow-sm h-100">
                   <div className="card-header bg-white fw-bold border-bottom">
@@ -179,7 +166,6 @@ function AdminDashboard() {
                 </div>
               </div>
 
-              {/* مخطط الحجوزات حسب المدينة */}
               <div className="col-lg-5">
                 <div className="card border-0 shadow-sm h-100">
                   <div className="card-header bg-white fw-bold border-bottom">
@@ -205,7 +191,6 @@ function AdminDashboard() {
               </div>
             </div>
 
-            {/* طلبات سكنات جديدة */}
             <div className="card border-0 shadow-sm">
               <div className="card-header bg-white fw-bold border-bottom">
                 <i className="bi bi-house-add me-2 text-warning"></i>New Housing Requests
@@ -243,7 +228,6 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ===== MANAGE USERS ===== */}
         {activeTab === 'users' && (
           <>
             <div className="d-flex gap-2 mb-3 flex-wrap">
@@ -296,7 +280,6 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ===== MANAGE HOUSING ===== */}
         {activeTab === 'housing' && (
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white fw-bold border-bottom d-flex justify-content-between">
@@ -336,7 +319,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ===== MANAGE BOOKINGS ===== */}
         {activeTab === 'bookings' && (
           <div className="card border-0 shadow-sm">
             <div className="card-body p-0">
@@ -364,7 +346,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ===== MAINTENANCE REPORTS ===== */}
         {activeTab === 'maintenance' && (
           <>
             <div className="mb-3 d-flex gap-2">
@@ -413,7 +394,6 @@ function AdminDashboard() {
           </>
         )}
 
-        {/* ===== ANALYTICS ===== */}
         {activeTab === 'analytics' && (
           <div className="row g-4">
             <div className="col-12">
@@ -453,7 +433,6 @@ function AdminDashboard() {
           </div>
         )}
 
-        {/* ===== SETTINGS ===== */}
         {activeTab === 'settings' && (
           <div className="row g-4">
             <div className="col-lg-6">

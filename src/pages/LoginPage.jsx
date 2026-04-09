@@ -2,9 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-// ==============================
-// صفحة تسجيل الدخول
-// ==============================
 function LoginPage() {
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -19,7 +16,6 @@ function LoginPage() {
     setLoading(true)
     setError('')
 
-    // استبدل هذا بـ api.post('/auth/login') عند ربط الباك ايند
     const result = login(form.email, form.password)
 
     if (result.success) {
@@ -45,7 +41,6 @@ function LoginPage() {
           <p className="text-muted">Sign in to your account</p>
         </div>
 
-        {/* رسالة الخطأ */}
         {error && (
           <div className="alert alert-danger d-flex align-items-center gap-2" role="alert">
             <i className="bi bi-exclamation-circle-fill"></i>
@@ -53,7 +48,6 @@ function LoginPage() {
           </div>
         )}
 
-        {/* بيانات تجريبية */}
         <div className="alert alert-info small mb-3">
           <strong>Demo accounts:</strong><br />
           student@dormify.com / student123<br />

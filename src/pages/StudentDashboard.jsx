@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { mockBookings, mockPayments, mockMaintenanceReports } from '../api/mockData'
 
-// ==============================
-// لوحة تحكم الطالب
-// ==============================
 function StudentDashboard() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -17,13 +14,11 @@ function StudentDashboard() {
 
   const handleReportSubmit = (e) => {
     e.preventDefault()
-    // استبدل بـ api.post('/maintenance') عند ربط الباك ايند
     setReportSent(true)
     setReportForm({ title: '', description: '', type: 'Plumbing' })
     setTimeout(() => setReportSent(false), 3000)
   }
 
-  // دالة لون الباج حسب الحالة
   const statusBadge = (status) => {
     if (status === 'Confirmed')   return 'success'
     if (status === 'Pending')     return 'warning'
@@ -45,11 +40,9 @@ function StudentDashboard() {
   return (
     <div className="d-flex min-vh-100 bg-light">
 
-      {/* ===== SIDEBAR ===== */}
       <div className="bg-white shadow-sm d-flex flex-column"
         style={{ width: '250px', minWidth: '250px', padding: '24px 16px' }}>
 
-        {/* اللوقو */}
         <div className="mb-4 px-2">
           <h5 className="fw-bold text-primary mb-0">
             <i className="bi bi-house-heart-fill me-2"></i>Dormify
@@ -57,7 +50,6 @@ function StudentDashboard() {
           <small className="text-muted">Student Panel</small>
         </div>
 
-        {/* معلومات الطالب */}
         <div className="d-flex align-items-center gap-2 bg-light rounded-2 p-2 mb-4">
           <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
             style={{ width: '40px', height: '40px', fontSize: '12px', flexShrink: 0 }}>
@@ -69,7 +61,6 @@ function StudentDashboard() {
           </div>
         </div>
 
-        {/* روابط التنقل */}
         <nav className="sidebar-nav flex-grow-1">
           {navItems.map((item) => (
             <button
@@ -83,17 +74,14 @@ function StudentDashboard() {
           ))}
         </nav>
 
-        {/* زر الخروج */}
         <button className="btn btn-outline-danger btn-sm mt-3 d-flex align-items-center gap-2"
           onClick={handleLogout}>
           <i className="bi bi-box-arrow-right"></i>Logout
         </button>
       </div>
 
-      {/* ===== MAIN CONTENT ===== */}
       <div className="flex-grow-1 p-4" style={{ overflowY: 'auto' }}>
 
-        {/* هيدر الصفحة */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
             <h4 className="fw-bold mb-0">
@@ -106,10 +94,8 @@ function StudentDashboard() {
           </button>
         </div>
 
-        {/* ===== TAB: BOOKINGS ===== */}
         {activeTab === 'bookings' && (
           <>
-            {/* بطاقات الإحصاء */}
             <div className="row g-3 mb-4">
               {[
                 { label: 'Total Bookings', value: mockBookings.length, icon: 'bi-calendar-check', color: 'primary' },
@@ -130,7 +116,6 @@ function StudentDashboard() {
               ))}
             </div>
 
-            {/* جدول الحجوزات */}
             <div className="card border-0 shadow-sm">
               <div className="card-body p-0">
                 <div className="table-responsive">
@@ -174,10 +159,8 @@ function StudentDashboard() {
           </>
         )}
 
-        {/* ===== TAB: PAYMENTS ===== */}
         {activeTab === 'payments' && (
           <>
-            {/* مجموع المدفوعات */}
             <div className="row g-3 mb-4">
               <div className="col-12 col-sm-4">
                 <div className="stat-card p-3">
@@ -239,10 +222,8 @@ function StudentDashboard() {
           </>
         )}
 
-        {/* ===== TAB: MAINTENANCE ===== */}
         {activeTab === 'maintenance' && (
           <>
-            {/* فورم إرسال البلاغ */}
             <div className="card border-0 shadow-sm mb-4">
               <div className="card-header bg-white fw-bold border-bottom">
                 <i className="bi bi-tools me-2 text-primary"></i>Send Maintenance Report
@@ -295,7 +276,6 @@ function StudentDashboard() {
               </div>
             </div>
 
-            {/* جدول البلاغات السابقة */}
             <div className="card border-0 shadow-sm">
               <div className="card-header bg-white fw-bold border-bottom">
                 Previous Reports
@@ -336,7 +316,6 @@ function StudentDashboard() {
           </>
         )}
 
-        {/* ===== TAB: SETTINGS ===== */}
         {activeTab === 'settings' && (
           <div className="card border-0 shadow-sm p-4" style={{ maxWidth: '500px' }}>
             <h6 className="fw-bold mb-4">Account Settings</h6>
