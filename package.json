@@ -2,24 +2,44 @@
   "name": "dormify",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "nodemon server/server.js",
+    "frontend": "vite",
+    "start": "node server/server.js"
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mysql2": "^3.22.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.22.3"
+    "react-router-dom": "^6.22.3",
+    "sequelize": "^6.37.8"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
+    "nodemon": "^3.1.14",
     "vite": "^5.1.4"
-  }
+  },
+  "description": "",
+  "main": "src/server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ragheed173/Dormify-Website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ragheed173/Dormify-Website/issues"
+  },
+  "homepage": "https://github.com/Ragheed173/Dormify-Website#readme"
 }

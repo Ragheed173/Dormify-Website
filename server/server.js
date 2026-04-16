@@ -1,10 +1,44 @@
-const app  = require("./app");
 require("dotenv").config();
+const app = require("./app");
+const { sequelize } = require("./models");
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Dormify Server running on http://localhost:${PORT}`);
-  console.log(`Admin API: http://localhost:${PORT}/api/admin`);
-  console.log(`Auth API:  http://localhost:${PORT}/api/auth`);
+process.on("exit", (code) => {
+  console.log("Process exit with code:", code);
 });
+
+process.on("SIGINT", () => {
+  console.log("SIGINT received");
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received");
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("Unhandled Rejection:", err);
+});
+
+const startServer = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log("Database connected successfully");
+
+    await sequelize.sync({ alter: true });
+    console.log("Database synced");
+
+    const server = app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log("Address:", server.address());
+    });
+  } catch (error) {
+    console.error("Server start error:", error);
+  }
+};
+
+startServer();
