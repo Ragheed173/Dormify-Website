@@ -1,9 +1,9 @@
 import React from "react";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../src/hooks/useAuth";
 
-import Sidebar from "../../components/dashboard/Sidebar";
-import StatsCards from "../../components/dashboard/StatsCards";
-import RecentBookings from "../../components/dashboard/RecentBookings";
+import Sidebar from "../../src/components/dashboard/Sidebar";
+import StatsCards from "../../src/components/dashboard/StatsCards";
+import RecentBookings from "../../src/components/dashboard/RecentBookings";
 
 function StudentDashboard() {
   const { user } = useAuth();
