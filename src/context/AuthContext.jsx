@@ -1,35 +1,77 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+import api from '../api/axiosInstance'
 
 const AuthContext = createContext(null)
 
-const MOCK_USERS = [
-  { name: 'Admin User',    email: 'admin@dormify.com',   password: 'admin123',   role: 'admin' },
-  { name: 'Ahmad Student', email: 'student@dormify.com', password: 'student123', role: 'student' },
-  { name: 'Khalid Owner',  email: 'owner@dormify.com',   password: 'owner123',   role: 'owner' },
-]
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const savedUser = localStorage.getItem('dormify_user')
     if (savedUser) {
-      setUser(JSON.parse(savedUser))
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch (error) {
+        localStorage.removeItem('dormify_user')
+        localStorage.removeItem('token')
+      }
     }
+    setLoading(false)
   }, [])
 
-  const login = (email, password) => {
-    const found = MOCK_USERS.find(
-      (u) => u.email === email && u.password === password
-    )
-    if (found) {
-      const userData = { name: found.name, email: found.email, role: found.role }
-      setUser(userData)
+  const login = async (email, password) => {
+    try {
+      const res = await api.post('/auth/login', { email, password })
+
+      const token = res.data.token
+      const userData = res.data.user
+
+      localStorage.setItem('token', token)
       localStorage.setItem('dormify_user', JSON.stringify(userData))
-      localStorage.setItem('token', 'mock-jwt-token-' + found.role)
-      return { success: true, role: found.role }
+      setUser(userData)
+
+      return {
+        success: true,
+        role: userData.role,
+        user: userData,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed',
+      }
     }
-    return { success: false, message: 'Invalid email or password' }
+  }
+
+  const register = async (name, email, password, phone, role = 'student') => {
+    try {
+      const res = await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        phone,
+        role,
+      })
+
+      const token = res.data.token
+      const userData = res.data.user
+
+      localStorage.setItem('token', token)
+      localStorage.setItem('dormify_user', JSON.stringify(userData))
+      setUser(userData)
+
+      return {
+        success: true,
+        role: userData.role,
+        user: userData,
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Register failed',
+      }
+    }
   }
 
   const logout = () => {
@@ -37,17 +79,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('dormify_user')
     localStorage.removeItem('token')
   }
-
-  const register = (name, email, password, role) => {
-    const userData = { name, email, role }
-    setUser(userData)
-    localStorage.setItem('dormify_user', JSON.stringify(userData))
-    localStorage.setItem('token', 'mock-jwt-token-' + role)
-    return { success: true, role }
-  }
+  
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, register }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   )
