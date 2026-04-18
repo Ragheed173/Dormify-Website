@@ -1,12 +1,16 @@
 const express = require("express");
 const router = express.Router();
+
 const studentController = require("../controllers/studentController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-router.get("/profile", authMiddleware, studentController.getProfile);
-router.put("/profile", authMiddleware, studentController.updateProfile);
-router.get("/bookings", authMiddleware, studentController.getMyBookings);
-router.get("/bookings/:id", authMiddleware, studentController.getMyBookingById);
-router.patch("/bookings/:id/cancel", authMiddleware, studentController.cancelBooking);
+router.use(authMiddleware);
+
+router.get("/profile", studentController.getStudentProfile);
+router.put("/profile", studentController.updateStudentProfile);
+
+router.get("/bookings", studentController.getStudentBookings);
+router.get("/bookings/:id", studentController.getStudentBookingById);
+router.patch("/bookings/:id/cancel", studentController.cancelStudentBooking);
 
 module.exports = router;
