@@ -14,7 +14,9 @@ const getAllHousings = async (req, res) => {
       limit = 10,
     } = req.query;
 
-    const where = {};
+    const where = {
+      location: 'Nablus',
+    }
 
     if (search) {
       where[Op.or] = [

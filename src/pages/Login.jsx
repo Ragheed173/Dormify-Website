@@ -22,11 +22,9 @@ function LoginPage() {
     const result = await login(form.email, form.password)
 
     if (result.success) {
-      if (result.role === 'admin') {
-        navigate('/admin/dashboard')
-      } else {
-        navigate('/student/dashboard')
-      }
+      if (result.role === 'admin') navigate('/admin/dashboard')
+      else if (result.role === 'owner') navigate('/owner/dashboard')
+      else navigate('/student/dashboard')
     } else {
       setError(result.message)
     }

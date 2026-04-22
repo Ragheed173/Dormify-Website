@@ -1,318 +1,428 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../hooks/useAuth";
-import api from "../api/axiosInstance";
-import Sidebar from "../components/dashboard/Sidebar";
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
+import api from '../api/axiosInstance'
 
 function StudentDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth()
 
-  const [profile, setProfile] = useState(null);
-  const [bookings, setBookings] = useState([]);
+  const [activeSection, setActiveSection] = useState('overview')
+
+  const [profile, setProfile] = useState(null)
+  const [bookings, setBookings] = useState([])
+
+  const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [cancelLoadingId, setCancelLoadingId] = useState(null)
+
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const [profileForm, setProfileForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [cancelLoadingId, setCancelLoadingId] = useState(null);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+    name: '',
+    email: '',
+    phone: '',
+  })
 
   const fetchStudentData = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
+      setError('')
+
       const [profileRes, bookingsRes] = await Promise.all([
-        api.get("/student/profile"),
-        api.get("/student/bookings"),
-      ]);
+        api.get('/student/profile'),
+        api.get('/student/bookings'),
+      ])
 
-      const profileData = profileRes.data?.data || null;
-      const bookingsData = bookingsRes.data?.data || [];
+      const profileData = profileRes.data?.data || null
+      const bookingsData = bookingsRes.data?.data || []
 
-      setProfile(profileData);
+      setProfile(profileData)
       setProfileForm({
-        name: profileData?.name || "",
-        email: profileData?.email || "",
-        phone: profileData?.phone || "",
-      });
-      setBookings(bookingsData);
-      setError("");
+        name: profileData?.name || '',
+        email: profileData?.email || '',
+        phone: profileData?.phone || '',
+      })
+      setBookings(bookingsData)
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load student data");
+      setError(err.response?.data?.message || 'Failed to load student dashboard')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchStudentData();
-  }, []);
+    fetchStudentData()
+  }, [])
+
+  const confirmedBookings = useMemo(() => {
+    return bookings.filter((booking) => booking.status === 'confirmed').length
+  }, [bookings])
+
+  const pendingBookings = useMemo(() => {
+    return bookings.filter((booking) => booking.status === 'pending').length
+  }, [bookings])
 
   const handleProfileChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setProfileForm((prev) => ({
       ...prev,
       [name]: value,
-    }));
-  };
-
-  const handleProfileUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      setProfileLoading(true);
-      setSuccess("");
-      setError("");
-
-      const res = await api.put("/student/profile", profileForm);
-      const updatedProfile = res.data?.data;
-
-      setProfile(updatedProfile);
-      setProfileForm({
-        name: updatedProfile?.name || "",
-        email: updatedProfile?.email || "",
-        phone: updatedProfile?.phone || "",
-      });
-
-      localStorage.setItem("dormify_user", JSON.stringify(updatedProfile));
-      setSuccess("Profile updated successfully");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
-    } finally {
-      setProfileLoading(false);
-    }
-  };
-
-  const handleCancelBooking = async (bookingId) => {
-    const confirmed = window.confirm("Are you sure you want to cancel this booking?");
-    if (!confirmed) return;
-
-    try {
-      setCancelLoadingId(bookingId);
-      setSuccess("");
-      setError("");
-
-      await api.patch(`/student/bookings/${bookingId}/cancel`);
-      await fetchStudentData();
-      setSuccess("Booking cancelled successfully");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to cancel booking");
-    } finally {
-      setCancelLoadingId(null);
-    }
-  };
-
-  const statusBadgeClass = (status) => {
-    const normalized = String(status).toLowerCase();
-
-    if (normalized === "confirmed") return "success";
-    if (normalized === "pending") return "warning";
-    if (normalized === "cancelled") return "danger";
-    if (normalized === "rejected") return "secondary";
-
-    return "secondary";
-  };
-
-  if (loading) {
-    return (
-      <div className="container py-5">
-        <div className="text-center">Loading student dashboard...</div>
-      </div>
-    );
+    }))
   }
 
-  return (
-    <div className="d-flex" style={{ minHeight: "calc(100vh - 72px)" }}>
-      <Sidebar user={profile || user} />
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault()
 
-      <main
-        className="flex-grow-1 p-3 p-md-4"
-        style={{ background: "var(--bg-light)" }}
-      >
-        <div
-          className="p-4 mb-4 text-white rounded"
-          style={{ background: "var(--primary)" }}
-        >
-          <h4 className="fw-bold">
-            👋 Welcome back, {profile?.name?.split(" ")?.[0] || "Student"}!
-          </h4>
-          <p className="small mb-0">Here's an overview of your account.</p>
+    try {
+      setProfileLoading(true)
+      setError('')
+      setSuccess('')
+
+      const res = await api.put('/student/profile', profileForm)
+      const updatedProfile = res.data?.data || null
+
+      setProfile(updatedProfile)
+      setProfileForm({
+        name: updatedProfile?.name || '',
+        email: updatedProfile?.email || '',
+        phone: updatedProfile?.phone || '',
+      })
+
+      localStorage.setItem('dormify_user', JSON.stringify(updatedProfile))
+      setSuccess('Profile updated successfully')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const handleCancelBooking = async (bookingId) => {
+    const confirmed = window.confirm('Are you sure you want to cancel this booking?')
+    if (!confirmed) return
+
+    try {
+      setCancelLoadingId(bookingId)
+      setError('')
+      setSuccess('')
+
+      await api.patch(`/student/bookings/${bookingId}/cancel`)
+      setSuccess('Booking cancelled successfully')
+      await fetchStudentData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to cancel booking')
+    } finally {
+      setCancelLoadingId(null)
+    }
+  }
+
+  const statusBadgeClass = (status) => {
+    const normalized = String(status).toLowerCase()
+
+    if (normalized === 'confirmed') return 'success'
+    if (normalized === 'pending') return 'warning'
+    if (normalized === 'cancelled') return 'danger'
+    if (normalized === 'rejected') return 'secondary'
+
+    return 'secondary'
+  }
+
+  const renderOverview = () => (
+    <>
+      <div className="mb-4">
+        <h1 className="fw-bold">Welcome back, {profile?.name || user?.name || 'Student'}</h1>
+        <p className="text-muted mb-0">
+          Manage your profile and follow your bookings from one place.
+        </p>
+      </div>
+
+      <div className="row g-4 mb-4">
+        <div className="col-12 col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">My Bookings</div>
+              <h2 className="fw-bold mb-0">{bookings.length}</h2>
+            </div>
+          </div>
         </div>
 
-        {error && <div className="alert alert-danger">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
-
-        <div className="row g-4 mb-4">
-          <div className="col-12 col-md-4">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <p className="text-muted small mb-1">My Name</p>
-                <h5 className="fw-bold mb-0">{profile?.name || "-"}</h5>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-12 col-md-4">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <p className="text-muted small mb-1">My Email</p>
-                <h5 className="fw-bold mb-0">{profile?.email || "-"}</h5>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-12 col-md-4">
-            <div className="card border-0 shadow-sm h-100">
-              <div className="card-body">
-                <p className="text-muted small mb-1">My Bookings</p>
-                <h5 className="fw-bold mb-0">{bookings.length}</h5>
-              </div>
+        <div className="col-12 col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">Pending</div>
+              <h2 className="fw-bold mb-0">{pendingBookings}</h2>
             </div>
           </div>
         </div>
 
-        <div className="row g-4">
-          <div className="col-12 col-lg-4">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white fw-bold">My Profile</div>
-              <div className="card-body">
-                <form onSubmit={handleProfileUpdate}>
-                  <div className="mb-3">
-                    <label className="form-label">Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      className="form-control"
-                      value={profileForm.name}
-                      onChange={handleProfileChange}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Email</label>
-                    <input
-                      type="email"
-                      name="email"
-                      className="form-control"
-                      value={profileForm.email}
-                      onChange={handleProfileChange}
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Phone</label>
-                    <input
-                      type="text"
-                      name="phone"
-                      className="form-control"
-                      value={profileForm.phone}
-                      onChange={handleProfileChange}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="btn btn-primary w-100"
-                    disabled={profileLoading}
-                  >
-                    {profileLoading ? "Saving..." : "Update Profile"}
-                  </button>
-                </form>
-              </div>
+        <div className="col-12 col-md-4">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">Confirmed</div>
+              <h2 className="fw-bold mb-0">{confirmedBookings}</h2>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="col-12 col-lg-8">
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white fw-bold">My Bookings</div>
-              <div className="card-body p-0">
-                {bookings.length === 0 ? (
-                  <div className="text-center py-5 text-muted">
-                    No bookings found
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-hover mb-0">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Housing</th>
-                          <th>Location</th>
-                          <th>Check In</th>
-                          <th>Check Out</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {bookings.map((booking) => (
-                          <tr key={booking.id}>
-                            <td>
-                              <div className="d-flex align-items-center gap-2">
-                                <img
-                                  src={
-                                    booking.Housing?.HousingImages?.[0]?.image_url ||
-                                    "https://via.placeholder.com/60x60?text=No+Image"
-                                  }
-                                  alt={booking.Housing?.title || "Housing"}
-                                  style={{
-                                    width: "52px",
-                                    height: "52px",
-                                    objectFit: "cover",
-                                    borderRadius: "8px",
-                                  }}
-                                />
-                                <div>
-                                  <div className="fw-medium">
-                                    {booking.Housing?.title || "N/A"}
-                                  </div>
-                                  <small className="text-muted">
-                                    ${booking.Housing?.price || 0}
-                                  </small>
-                                </div>
-                              </div>
-                            </td>
-                            <td>{booking.Housing?.location || "N/A"}</td>
-                            <td>{booking.start_date || "-"}</td>
-                            <td>{booking.end_date || "-"}</td>
-                            <td>
-                              <span
-                                className={`badge bg-${statusBadgeClass(
-                                  booking.status
-                                )}`}
-                              >
-                                {booking.status}
-                              </span>
-                            </td>
-                            <td>
-                              {booking.status !== "cancelled" ? (
-                                <button
-                                  className="btn btn-sm btn-outline-danger"
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  disabled={cancelLoadingId === booking.id}
-                                >
-                                  {cancelLoadingId === booking.id
-                                    ? "Cancelling..."
-                                    : "Cancel"}
-                                </button>
-                              ) : (
-                                <span className="text-muted small">Cancelled</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+      <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white fw-bold">Recent Bookings</div>
+        <div className="card-body p-0">
+          {bookings.length === 0 ? (
+            <div className="text-center py-5 text-muted">No bookings found</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover mb-0">
+                <thead className="table-light">
+                  <tr>
+                    <th>Housing</th>
+                    <th>Location</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.slice(0, 5).map((booking) => (
+                    <tr key={booking.id}>
+                      <td>{booking.Housing?.title || 'N/A'}</td>
+                      <td>{booking.Housing?.location || 'N/A'}</td>
+                      <td>{booking.start_date}</td>
+                      <td>{booking.end_date}</td>
+                      <td>
+                        <span className={`badge bg-${statusBadgeClass(booking.status)}`}>
+                          {booking.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+
+  const renderProfile = () => (
+    <div className="card border-0 shadow-sm">
+      <div className="card-header bg-white fw-bold">My Profile</div>
+      <div className="card-body" style={{ maxWidth: '700px' }}>
+        <form onSubmit={handleProfileUpdate}>
+          <div className="row g-3">
+            <div className="col-md-4">
+              <label className="form-label">Name</label>
+              <input
+                type="text"
+                name="name"
+                className="form-control"
+                value={profileForm.name}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                value={profileForm.email}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Phone</label>
+              <input
+                type="text"
+                name="phone"
+                className="form-control"
+                value={profileForm.phone}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-12">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={profileLoading}
+              >
+                {profileLoading ? 'Saving...' : 'Update Profile'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+
+  const renderBookings = () => (
+    <div className="card border-0 shadow-sm">
+      <div className="card-header bg-white fw-bold">My Bookings</div>
+      <div className="card-body p-0">
+        {bookings.length === 0 ? (
+          <div className="text-center py-5 text-muted">No bookings found</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Housing</th>
+                  <th>Location</th>
+                  <th>Dates</th>
+                  <th>Status</th>
+                  <th style={{ width: '120px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => (
+                  <tr key={booking.id}>
+                    <td>
+                      <div className="d-flex align-items-center gap-2">
+                        <img
+                          src={
+                            booking.Housing?.HousingImages?.[0]?.image_url ||
+                            'https://via.placeholder.com/60x60?text=No+Image'
+                          }
+                          alt={booking.Housing?.title || 'Housing'}
+                          style={{
+                            width: '52px',
+                            height: '52px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                          }}
+                        />
+                        <div>
+                          <div className="fw-medium">{booking.Housing?.title || 'N/A'}</div>
+                          <small className="text-muted">${booking.Housing?.price || 0}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{booking.Housing?.location || 'N/A'}</td>
+                    <td>
+                      <div>{booking.start_date}</div>
+                      <small className="text-muted">{booking.end_date}</small>
+                    </td>
+                    <td>
+                      <span className={`badge bg-${statusBadgeClass(booking.status)}`}>
+                        {booking.status}
+                      </span>
+                    </td>
+                    <td>
+                      {booking.status !== 'cancelled' ? (
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={cancelLoadingId === booking.id}
+                        >
+                          {cancelLoadingId === booking.id ? 'Cancelling...' : 'Cancel'}
+                        </button>
+                      ) : (
+                        <span className="text-muted small">Cancelled</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+
+                {bookings.length === 0 && (
+                  <tr>
+                    <td colSpan="5" className="text-center text-muted py-4">
+                      No bookings found
+                    </td>
+                  </tr>
                 )}
-              </div>
-            </div>
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="d-flex" style={{ minHeight: '100vh', background: '#f8f9fb' }}>
+      <aside
+        className="text-white p-3 d-flex flex-column"
+        style={{
+          width: '280px',
+          background: '#1f2430',
+          minHeight: '100vh',
+          position: 'sticky',
+          top: 0,
+        }}
+      >
+        <div className="mb-4">
+          <h3 className="fw-bold mb-0 text-primary">
+            <i className="bi bi-house-heart-fill me-2"></i>Dormify
+          </h3>
+          <div className="text-white-50">Student Dashboard</div>
+        </div>
+
+        <div className="bg-secondary bg-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+          <div
+            className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+            style={{ width: '44px', height: '44px', background: '#0d6efd' }}
+          >
+            {profile?.name?.[0] || user?.name?.[0] || 'S'}
+          </div>
+          <div>
+            <div className="fw-bold">{profile?.name || user?.name || 'Student User'}</div>
+            <span className="badge bg-primary">Student</span>
           </div>
         </div>
+
+        <div className="nav flex-column gap-2">
+          <button
+            className={`btn text-start ${activeSection === 'overview' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('overview')}
+          >
+            <i className="bi bi-speedometer2 me-2"></i>Overview
+          </button>
+
+          <button
+            className={`btn text-start ${activeSection === 'profile' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <i className="bi bi-person me-2"></i>My Profile
+          </button>
+
+          <button
+            className={`btn text-start ${activeSection === 'bookings' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('bookings')}
+          >
+            <i className="bi bi-calendar-check me-2"></i>My Bookings
+          </button>
+        </div>
+
+        <div className="mt-auto">
+          <button className="btn btn-outline-light w-100" onClick={logout}>
+            <i className="bi bi-box-arrow-right me-2"></i>Logout
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-grow-1 p-4">
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status"></div>
+            <p className="text-muted mt-3">Loading student dashboard...</p>
+          </div>
+        ) : (
+          <>
+            {error && <div className="alert alert-danger">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+
+            {activeSection === 'overview' && renderOverview()}
+            {activeSection === 'profile' && renderProfile()}
+            {activeSection === 'bookings' && renderBookings()}
+          </>
+        )}
       </main>
     </div>
-  );
+  )
 }
 
-export default StudentDashboard;
+export default StudentDashboard

@@ -5,7 +5,7 @@ const adminController = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 
-//router.use(authMiddleware, roleMiddleware("admin"));
+router.use(authMiddleware, roleMiddleware("admin"));
 
 router.get("/dashboard", adminController.getDashboardStats);
 

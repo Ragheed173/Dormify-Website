@@ -7,6 +7,9 @@ const Booking = require("./Booking");
 User.hasMany(Booking, { foreignKey: "user_id", onDelete: "CASCADE" });
 Booking.belongsTo(User, { foreignKey: "user_id" });
 
+User.hasMany(Housing, { foreignKey: "owner_id", onDelete: "CASCADE" });
+Housing.belongsTo(User, { foreignKey: "owner_id", as: "Owner" });
+
 Housing.hasMany(Booking, { foreignKey: "housing_id", onDelete: "CASCADE" });
 Booking.belongsTo(Housing, { foreignKey: "housing_id" });
 

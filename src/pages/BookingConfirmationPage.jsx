@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
-import { mockHousings } from '../api/mockData'
 import { useAuth } from '../context/AuthContext'
 
 function BookingConfirmationPage() {
