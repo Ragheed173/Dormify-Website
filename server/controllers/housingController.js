@@ -25,9 +25,11 @@ const getAllHousings = async (req, res) => {
 
     if (minPrice || maxPrice) {
       where.price = {};
+
       if (minPrice) {
         where.price[Op.gte] = Number(minPrice);
       }
+
       if (maxPrice) {
         where.price[Op.lte] = Number(maxPrice);
       }
@@ -80,6 +82,37 @@ const getAllHousings = async (req, res) => {
   }
 };
 
+const getHousingById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const housing = await Housing.findByPk(id, {
+      include: [
+        {
+          model: HousingImage,
+        },
+      ],
+    });
+
+    if (!housing) {
+      return res.status(404).json({
+        message: "Housing not found",
+      });
+    }
+
+    return res.status(200).json({
+      message: "Housing fetched successfully",
+      data: housing,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch housing",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllHousings,
+  getHousingById,
 };
