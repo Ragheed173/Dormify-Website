@@ -56,11 +56,6 @@ function LoginPage() {
           </div>
         )}
 
-        <div className="alert alert-info small mb-3">
-          <strong>Demo accounts:</strong><br />
-          student@dormify.com / student123<br />
-          admin@dormify.com / admin123
-        </div>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
