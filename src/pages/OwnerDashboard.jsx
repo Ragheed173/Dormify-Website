@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
-import { Link, useNavigate  } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
@@ -551,8 +551,8 @@ function OwnerDashboard() {
                   {housingLoading
                     ? 'Saving...'
                     : editingHousingId
-                    ? 'Update Housing'
-                    : 'Add Housing'}
+                      ? 'Update Housing'
+                      : 'Add Housing'}
                 </button>
 
                 {editingHousingId && (
@@ -655,50 +655,57 @@ function OwnerDashboard() {
   )
 
   const renderBookings = () => (
-    <div className="card border-0 shadow-sm">
-      <div className="card-header bg-white fw-bold">Booking Requests</div>
-      <div className="card-body p-0">
-        {bookings.length === 0 ? (
-          <div className="text-center py-5 text-muted">No bookings found</div>
-        ) : (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th>Student</th>
-                  <th>Housing</th>
-                  <th>Location</th>
-                  <th>Dates</th>
-                  <th>Status</th>
-                  <th style={{ width: '180px' }}>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings.map((booking) => (
-                  <tr key={booking.id}>
+  <div className="card border-0 shadow-sm">
+    <div className="card-header bg-white fw-bold">Booking Requests</div>
+    <div className="card-body p-0">
+      {!Array.isArray(bookings) || bookings.length === 0 ? (
+        <div className="text-center py-5 text-muted">No bookings found</div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>Student</th>
+                <th>Housing</th>
+                <th>Location</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th style={{ width: '180px' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bookings.map((booking) => {
+                const studentName = booking?.User?.name || 'N/A'
+                const studentEmail = booking?.User?.email || ''
+                const housingTitle = booking?.Housing?.title || 'N/A'
+                const housingLocation = booking?.Housing?.location || 'N/A'
+                const startDate = booking?.start_date || '-'
+                const endDate = booking?.end_date || '-'
+                const bookingStatus = booking?.status || 'pending'
+
+                return (
+                  <tr key={booking?.id || Math.random()}>
                     <td>
-                      <div className="fw-medium">{booking.User?.name || 'N/A'}</div>
-                      <small className="text-muted">{booking.User?.email || ''}</small>
+                      <div className="fw-medium">{studentName}</div>
+                      <small className="text-muted">{studentEmail}</small>
                     </td>
-                    <td>{booking.Housing?.title || 'N/A'}</td>
-                    <td>{booking.Housing?.location || 'N/A'}</td>
+                    <td>{housingTitle}</td>
+                    <td>{housingLocation}</td>
                     <td>
-                      <div>{booking.start_date}</div>
-                      <small className="text-muted">{booking.end_date}</small>
+                      <div>{startDate}</div>
+                      <small className="text-muted">{endDate}</small>
                     </td>
                     <td>
-                      <span className={`badge bg-${statusBadgeClass(booking.status)}`}>
-                        {booking.status}
+                      <span className={`badge bg-${statusBadgeClass(bookingStatus)}`}>
+                        {bookingStatus}
                       </span>
                     </td>
                     <td>
-                      {booking.status === 'pending' ? (
+                      {bookingStatus === 'pending' ? (
                         <div className="d-flex flex-wrap gap-2">
                           <button
                             className="btn btn-sm btn-outline-success"
-                            onClick={() =>
-                              handleBookingStatusUpdate(booking.id, 'confirmed')
-                            }
+                            onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
                             disabled={bookingActionId === booking.id}
                           >
                             Confirm
@@ -706,9 +713,7 @@ function OwnerDashboard() {
 
                           <button
                             className="btn btn-sm btn-outline-danger"
-                            onClick={() =>
-                              handleBookingStatusUpdate(booking.id, 'rejected')
-                            }
+                            onClick={() => handleBookingStatusUpdate(booking.id, 'rejected')}
                             disabled={bookingActionId === booking.id}
                           >
                             Reject
@@ -719,22 +724,15 @@ function OwnerDashboard() {
                       )}
                     </td>
                   </tr>
-                ))}
-
-                {bookings.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="text-center text-muted py-4">
-                      No bookings found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-  )
+  </div>
+)
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh', background: '#f8f9fb' }}>
