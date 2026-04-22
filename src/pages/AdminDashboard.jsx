@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
+import { Link } from 'react-router-dom'
 
 function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -460,13 +461,12 @@ function AdminDashboard() {
                   <td>{item.phone || '-'}</td>
                   <td>
                     <span
-                      className={`badge bg-${
-                        item.role === 'admin'
+                      className={`badge bg-${item.role === 'admin'
                           ? 'danger'
                           : item.role === 'owner'
-                          ? 'warning'
-                          : 'primary'
-                      }`}
+                            ? 'warning'
+                            : 'primary'
+                        }`}
                     >
                       {item.role}
                     </span>
@@ -727,9 +727,9 @@ function AdminDashboard() {
                 $
                 {bookings.length
                   ? Math.round(
-                      bookings.reduce((sum, b) => sum + Number(b.Housing?.price || 0), 0) /
-                        bookings.length
-                    )
+                    bookings.reduce((sum, b) => sum + Number(b.Housing?.price || 0), 0) /
+                    bookings.length
+                  )
                   : 0}
               </h3>
             </div>
@@ -741,8 +741,8 @@ function AdminDashboard() {
               <h3 className="fw-bold text-info mb-0">
                 {bookings.length
                   ? Math.round(
-                      (bookings.filter((b) => b.status === 'confirmed').length / bookings.length) * 100
-                    )
+                    (bookings.filter((b) => b.status === 'confirmed').length / bookings.length) * 100
+                  )
                   : 0}
                 %
               </h3>
@@ -848,55 +848,50 @@ function AdminDashboard() {
 
         <div className="nav flex-column gap-2">
           <button
-            className={`btn text-start ${
-              activeSection === 'overview'
+            className={`btn text-start ${activeSection === 'overview'
                 ? 'btn-primary'
                 : 'btn-dark border-0 text-white-50'
-            }`}
+              }`}
             onClick={() => setActiveSection('overview')}
           >
             <i className="bi bi-speedometer2 me-2"></i>Overview
           </button>
 
           <button
-            className={`btn text-start ${
-              activeSection === 'users'
+            className={`btn text-start ${activeSection === 'users'
                 ? 'btn-primary'
                 : 'btn-dark border-0 text-white-50'
-            }`}
+              }`}
             onClick={() => setActiveSection('users')}
           >
             <i className="bi bi-people me-2"></i>Manage Users
           </button>
 
           <button
-            className={`btn text-start ${
-              activeSection === 'housing'
+            className={`btn text-start ${activeSection === 'housing'
                 ? 'btn-primary'
                 : 'btn-dark border-0 text-white-50'
-            }`}
+              }`}
             onClick={() => setActiveSection('housing')}
           >
             <i className="bi bi-house-door me-2"></i>Manage Housing
           </button>
 
           <button
-            className={`btn text-start ${
-              activeSection === 'reports'
+            className={`btn text-start ${activeSection === 'reports'
                 ? 'btn-primary'
                 : 'btn-dark border-0 text-white-50'
-            }`}
+              }`}
             onClick={() => setActiveSection('reports')}
           >
             <i className="bi bi-bar-chart-line me-2"></i>Reports & Analytics
           </button>
 
           <button
-            className={`btn text-start ${
-              activeSection === 'settings'
+            className={`btn text-start ${activeSection === 'settings'
                 ? 'btn-primary'
                 : 'btn-dark border-0 text-white-50'
-            }`}
+              }`}
             onClick={() => setActiveSection('settings')}
           >
             <i className="bi bi-gear me-2"></i>Settings
@@ -911,6 +906,12 @@ function AdminDashboard() {
       </aside>
 
       <main className="flex-grow-1 p-4">
+        <div className="d-flex justify-content-end mb-3">
+          <Link to="/" className="btn btn-outline-primary">
+            <i className="bi bi-house-door ms-2"></i>
+            HOMEPAGE
+          </Link>
+        </div>
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-primary" role="status"></div>

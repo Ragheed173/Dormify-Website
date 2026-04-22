@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
+import { Link } from 'react-router-dom'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
@@ -798,6 +799,12 @@ function OwnerDashboard() {
       </aside>
 
       <main className="flex-grow-1 p-4">
+        <div className="d-flex justify-content-end mb-3">
+          <Link to="/" className="btn btn-outline-primary">
+            <i className="bi bi-house-door ms-2"></i>
+            HOMEPAGE
+          </Link>
+        </div>
         {loading ? (
           <div className="text-center py-5">
             <div className="spinner-border text-primary" role="status"></div>
