@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate  } from 'react-router-dom'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
@@ -245,6 +245,13 @@ function OwnerDashboard() {
     if (normalized === 'unavailable') return 'danger'
 
     return 'secondary'
+  }
+
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/')
   }
 
   const renderOverview = () => (
@@ -792,7 +799,7 @@ function OwnerDashboard() {
         </div>
 
         <div className="mt-auto">
-          <button className="btn btn-outline-light w-100" onClick={logout}>
+          <button className="btn btn-outline-light w-100" onClick={handleLogout}>
             <i className="bi bi-box-arrow-right me-2"></i>Logout
           </button>
         </div>
