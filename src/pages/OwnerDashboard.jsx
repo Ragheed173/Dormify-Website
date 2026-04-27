@@ -225,10 +225,18 @@ function OwnerDashboard() {
       setSuccess('')
 
       await api.patch(`/owner/bookings/${bookingId}/status`, { status })
-      setSuccess('Booking status updated successfully')
+
+      setSuccess(
+        status === 'confirmed'
+          ? 'تمت الموافقة على طلب الحجز بنجاح'
+          : status === 'rejected'
+            ? 'تم رفض طلب الحجز'
+            : 'تم تحديث حالة الحجز'
+      )
+
       await fetchOwnerData()
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update booking status')
+      setError(err.response?.data?.message || 'فشل في تحديث حالة الحجز')
     } finally {
       setBookingActionId(null)
     }
@@ -655,84 +663,93 @@ function OwnerDashboard() {
   )
 
   const renderBookings = () => (
-  <div className="card border-0 shadow-sm">
-    <div className="card-header bg-white fw-bold">Booking Requests</div>
-    <div className="card-body p-0">
-      {!Array.isArray(bookings) || bookings.length === 0 ? (
-        <div className="text-center py-5 text-muted">No bookings found</div>
-      ) : (
-        <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0">
-            <thead className="table-light">
-              <tr>
-                <th>Student</th>
-                <th>Housing</th>
-                <th>Location</th>
-                <th>Dates</th>
-                <th>Status</th>
-                <th style={{ width: '180px' }}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking) => {
-                const studentName = booking?.User?.name || 'N/A'
-                const studentEmail = booking?.User?.email || ''
-                const housingTitle = booking?.Housing?.title || 'N/A'
-                const housingLocation = booking?.Housing?.location || 'N/A'
-                const startDate = booking?.start_date || '-'
-                const endDate = booking?.end_date || '-'
-                const bookingStatus = booking?.status || 'pending'
+    <div className="card border-0 shadow-sm">
+      <div className="card-header bg-white fw-bold">Booking Requests</div>
+      <div className="card-body p-0">
+        {!Array.isArray(bookings) || bookings.length === 0 ? (
+          <div className="text-center py-5 text-muted">No booking requests found</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Student</th>
+                  <th>Housing</th>
+                  <th>Location</th>
+                  <th>Dates</th>
+                  <th>Status</th>
+                  <th style={{ width: '220px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => {
+                  const studentName = booking?.User?.name || 'Unknown'
+                  const studentEmail = booking?.User?.email || ''
+                  const housingTitle = booking?.Housing?.title || 'N/A'
+                  const housingLocation = booking?.Housing?.location || 'N/A'
+                  const startDate = booking?.start_date || '-'
+                  const endDate = booking?.end_date || '-'
+                  const bookingStatus = booking?.status || 'pending'
 
-                return (
-                  <tr key={booking?.id || Math.random()}>
-                    <td>
-                      <div className="fw-medium">{studentName}</div>
-                      <small className="text-muted">{studentEmail}</small>
-                    </td>
-                    <td>{housingTitle}</td>
-                    <td>{housingLocation}</td>
-                    <td>
-                      <div>{startDate}</div>
-                      <small className="text-muted">{endDate}</small>
-                    </td>
-                    <td>
-                      <span className={`badge bg-${statusBadgeClass(bookingStatus)}`}>
-                        {bookingStatus}
-                      </span>
-                    </td>
-                    <td>
-                      {bookingStatus === 'pending' ? (
-                        <div className="d-flex flex-wrap gap-2">
-                          <button
-                            className="btn btn-sm btn-outline-success"
-                            onClick={() => handleBookingStatusUpdate(booking.id, 'confirmed')}
-                            disabled={bookingActionId === booking.id}
-                          >
-                            Confirm
-                          </button>
+                  return (
+                    <tr key={booking?.id}>
+                      <td>
+                        <div className="fw-medium">{studentName}</div>
+                        <small className="text-muted">{studentEmail}</small>
+                      </td>
 
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => handleBookingStatusUpdate(booking.id, 'rejected')}
-                            disabled={bookingActionId === booking.id}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      ) : (
-                        <span className="text-muted small">No action needed</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+                      <td>{housingTitle}</td>
+
+                      <td>{housingLocation}</td>
+
+                      <td>
+                        <div>{startDate}</div>
+                        <small className="text-muted">{endDate}</small>
+                      </td>
+
+                      <td>
+                        <span className={`badge bg-${statusBadgeClass(bookingStatus)}`}>
+                          {bookingStatus}
+                        </span>
+                      </td>
+
+                      <td>
+                        {bookingStatus === 'pending' ? (
+                          <div className="d-flex flex-wrap gap-2">
+                            <button
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() =>
+                                handleBookingStatusUpdate(booking.id, 'confirmed')
+                              }
+                              disabled={bookingActionId === booking.id}
+                            >
+                              {bookingActionId === booking.id ? 'Processing...' : 'Confirm'}
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                handleBookingStatusUpdate(booking.id, 'rejected')
+                              }
+                              disabled={bookingActionId === booking.id}
+                            >
+                              {bookingActionId === booking.id ? 'Processing...' : 'Reject'}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-muted small">No action needed</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
-  </div>
-)
+  )
 
   return (
     <div className="d-flex" style={{ minHeight: '100vh', background: '#f8f9fb' }}>

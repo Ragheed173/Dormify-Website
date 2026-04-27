@@ -1,74 +1,74 @@
-const { User, Housing, HousingImage, Booking } = require("../models");
+const { User, Housing, HousingImage, Booking } = require('../models')
 
 const getOwnerProfile = async (req, res) => {
   try {
     const owner = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
-    });
+      attributes: { exclude: ['password'] },
+    })
 
     if (!owner) {
       return res.status(404).json({
-        message: "Owner not found",
-      });
+        message: 'Owner not found',
+      })
     }
 
     return res.status(200).json({
-      message: "Owner profile fetched successfully",
+      message: 'Owner profile fetched successfully',
       data: owner,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch owner profile",
+      message: 'Failed to fetch owner profile',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const updateOwnerProfile = async (req, res) => {
   try {
-    const { name, email, phone } = req.body;
+    const { name, email, phone } = req.body
 
-    const owner = await User.findByPk(req.user.id);
+    const owner = await User.findByPk(req.user.id)
 
     if (!owner) {
       return res.status(404).json({
-        message: "Owner not found",
-      });
+        message: 'Owner not found',
+      })
     }
 
     if (email && email !== owner.email) {
       const existingUser = await User.findOne({
         where: { email },
-      });
+      })
 
       if (existingUser) {
         return res.status(400).json({
-          message: "Email is already in use",
-        });
+          message: 'Email is already in use',
+        })
       }
     }
 
-    owner.name = name ?? owner.name;
-    owner.email = email ?? owner.email;
-    owner.phone = phone ?? owner.phone;
+    owner.name = name ?? owner.name
+    owner.email = email ?? owner.email
+    owner.phone = phone ?? owner.phone
 
-    await owner.save();
+    await owner.save()
 
     const updatedOwner = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
-    });
+      attributes: { exclude: ['password'] },
+    })
 
     return res.status(200).json({
-      message: "Owner profile updated successfully",
+      message: 'Owner profile updated successfully',
       data: updatedOwner,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to update owner profile",
+      message: 'Failed to update owner profile',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const getOwnerHousings = async (req, res) => {
   try {
@@ -81,20 +81,20 @@ const getOwnerHousings = async (req, res) => {
           model: HousingImage,
         },
       ],
-      order: [["createdAt", "DESC"]],
-    });
+      order: [['createdAt', 'DESC']],
+    })
 
     return res.status(200).json({
-      message: "Owner housings fetched successfully",
+      message: 'Owner housings fetched successfully',
       data: housings,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch owner housings",
+      message: 'Failed to fetch owner housings',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const createOwnerHousing = async (req, res) => {
   try {
@@ -108,12 +108,12 @@ const createOwnerHousing = async (req, res) => {
       available_rooms,
       status,
       image_urls,
-    } = req.body;
+    } = req.body
 
     if (!title || !location || !price || !room_type) {
       return res.status(400).json({
-        message: "title, location, price, and room_type are required",
-      });
+        message: 'title, location, price, and room_type are required',
+      })
     }
 
     const housing = await Housing.create({
@@ -126,36 +126,36 @@ const createOwnerHousing = async (req, res) => {
       available_rooms,
       status,
       owner_id: req.user.id,
-    });
+    })
 
     if (Array.isArray(image_urls) && image_urls.length > 0) {
       const imageRecords = image_urls.map((url) => ({
         housing_id: housing.id,
         image_url: url,
-      }));
+      }))
 
-      await HousingImage.bulkCreate(imageRecords);
+      await HousingImage.bulkCreate(imageRecords)
     }
 
     const createdHousing = await Housing.findByPk(housing.id, {
       include: [{ model: HousingImage }],
-    });
+    })
 
     return res.status(201).json({
-      message: "Housing created successfully",
+      message: 'Housing created successfully',
       data: createdHousing,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to create housing",
+      message: 'Failed to create housing',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const updateOwnerHousing = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
     const {
       title,
       description,
@@ -166,92 +166,92 @@ const updateOwnerHousing = async (req, res) => {
       available_rooms,
       status,
       image_urls,
-    } = req.body;
+    } = req.body
 
     const housing = await Housing.findOne({
       where: {
         id,
         owner_id: req.user.id,
       },
-    });
+    })
 
     if (!housing) {
       return res.status(404).json({
-        message: "Housing not found or does not belong to this owner",
-      });
+        message: 'Housing not found or does not belong to this owner',
+      })
     }
 
-    housing.title = title ?? housing.title;
-    housing.description = description ?? housing.description;
-    housing.location = location ?? housing.location;
-    housing.price = price ?? housing.price;
-    housing.gender_allowed = gender_allowed ?? housing.gender_allowed;
-    housing.room_type = room_type ?? housing.room_type;
-    housing.available_rooms = available_rooms ?? housing.available_rooms;
-    housing.status = status ?? housing.status;
+    housing.title = title ?? housing.title
+    housing.description = description ?? housing.description
+    housing.location = location ?? housing.location
+    housing.price = price ?? housing.price
+    housing.gender_allowed = gender_allowed ?? housing.gender_allowed
+    housing.room_type = room_type ?? housing.room_type
+    housing.available_rooms = available_rooms ?? housing.available_rooms
+    housing.status = status ?? housing.status
 
-    await housing.save();
+    await housing.save()
 
     if (Array.isArray(image_urls)) {
       await HousingImage.destroy({
         where: { housing_id: housing.id },
-      });
+      })
 
       if (image_urls.length > 0) {
         const imageRecords = image_urls.map((url) => ({
           housing_id: housing.id,
           image_url: url,
-        }));
+        }))
 
-        await HousingImage.bulkCreate(imageRecords);
+        await HousingImage.bulkCreate(imageRecords)
       }
     }
 
     const updatedHousing = await Housing.findByPk(housing.id, {
       include: [{ model: HousingImage }],
-    });
+    })
 
     return res.status(200).json({
-      message: "Housing updated successfully",
+      message: 'Housing updated successfully',
       data: updatedHousing,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to update housing",
+      message: 'Failed to update housing',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const deleteOwnerHousing = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
 
     const housing = await Housing.findOne({
       where: {
         id,
         owner_id: req.user.id,
       },
-    });
+    })
 
     if (!housing) {
       return res.status(404).json({
-        message: "Housing not found or does not belong to this owner",
-      });
+        message: 'Housing not found or does not belong to this owner',
+      })
     }
 
-    await housing.destroy();
+    await housing.destroy()
 
     return res.status(200).json({
-      message: "Housing deleted successfully",
-    });
+      message: 'Housing deleted successfully',
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to delete housing",
+      message: 'Failed to delete housing',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const getOwnerBookings = async (req, res) => {
   try {
@@ -266,23 +266,23 @@ const getOwnerBookings = async (req, res) => {
         },
         {
           model: User,
-          attributes: { exclude: ["password"] },
+          attributes: { exclude: ['password'] },
         },
       ],
-      order: [["createdAt", "DESC"]],
-    });
+      order: [['createdAt', 'DESC']],
+    })
 
     return res.status(200).json({
-      message: "Owner bookings fetched successfully",
+      message: 'Owner bookings fetched successfully',
       data: bookings,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch owner bookings",
+      message: 'Failed to fetch owner bookings',
       error: error.message,
-    });
+    })
   }
-};
+}
 
 const updateOwnerBookingStatus = async (req, res) => {
   try {
@@ -313,28 +313,65 @@ const updateOwnerBookingStatus = async (req, res) => {
       })
     }
 
-    if (booking.status === 'confirmed' && ['rejected', 'cancelled'].includes(status)) {
-      booking.Housing.available_rooms += 1
-      await booking.Housing.save()
+    const housing = booking.Housing
+
+    if (!housing) {
+      return res.status(404).json({
+        message: 'Housing not found for this booking',
+      })
     }
 
-    if (booking.status !== 'confirmed' && status === 'confirmed') {
-      if (booking.Housing.available_rooms <= 0) {
+    const oldStatus = booking.status
+
+    if (oldStatus !== 'confirmed' && status === 'confirmed') {
+      if (housing.status !== 'available' || housing.available_rooms <= 0) {
         return res.status(400).json({
-          message: 'No available rooms left for confirmation',
+          message: 'This housing is no longer available',
         })
       }
 
-      booking.Housing.available_rooms -= 1
-      await booking.Housing.save()
+      housing.available_rooms -= 1
+
+      if (housing.available_rooms <= 0) {
+        housing.available_rooms = 0
+        housing.status = 'unavailable'
+      }
+
+      await housing.save()
+    }
+
+    if (
+      oldStatus === 'confirmed' &&
+      (status === 'rejected' || status === 'cancelled')
+    ) {
+      housing.available_rooms += 1
+
+      if (housing.available_rooms > 0) {
+        housing.status = 'available'
+      }
+
+      await housing.save()
     }
 
     booking.status = status
     await booking.save()
 
+    const updatedBooking = await Booking.findByPk(booking.id, {
+      include: [
+        {
+          model: Housing,
+          include: [{ model: HousingImage }],
+        },
+        {
+          model: User,
+          attributes: { exclude: ['password'] },
+        },
+      ],
+    })
+
     return res.status(200).json({
       message: 'Booking status updated successfully',
-      data: booking,
+      data: updatedBooking,
     })
   } catch (error) {
     return res.status(500).json({

@@ -1,4 +1,4 @@
-const { Booking, Housing, HousingImage, User, sequelize } = require("../models");
+const { Booking, Housing, User, HousingImage, sequelize } = require('../models')
 
 const createBooking = async (req, res) => {
   try {
@@ -19,9 +19,9 @@ const createBooking = async (req, res) => {
       });
     }
 
-    if (housing.available_rooms <= 0) {
+    if (housing.status !== "available" || housing.available_rooms <= 0) {
       return res.status(400).json({
-        message: "No available rooms for this housing",
+        message: "This housing is not available for booking",
       });
     }
 
@@ -61,36 +61,35 @@ const createBooking = async (req, res) => {
 
 const getBookingById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params
 
     const booking = await Booking.findByPk(id, {
       include: [
         {
-          model: User,
-          attributes: { exclude: ["password"] },
+          model: Housing,
         },
         {
-          model: Housing,
-          include: [{ model: HousingImage }],
+          model: User,
+          attributes: { exclude: ['password'] },
         },
       ],
-    });
+    })
 
     if (!booking) {
       return res.status(404).json({
-        message: "Booking not found",
-      });
+        message: 'Booking not found',
+      })
     }
 
     return res.status(200).json({
-      message: "Booking fetched successfully",
+      message: 'Booking fetched successfully',
       data: booking,
-    });
+    })
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch booking",
+      message: 'Failed to fetch booking',
       error: error.message,
-    });
+    })
   }
 };
 
@@ -135,14 +134,20 @@ const updateBookingStatus = async (req, res) => {
     }
 
     if (oldStatus !== "confirmed" && status === "confirmed") {
-      if (housing.available_rooms <= 0) {
+      if (housing.status !== "available" || housing.available_rooms <= 0) {
         await transaction.rollback();
         return res.status(400).json({
-          message: "No available rooms left for confirmation",
+          message: "This housing is no longer available",
         });
       }
 
       housing.available_rooms -= 1;
+
+      if (housing.available_rooms <= 0) {
+        housing.available_rooms = 0;
+        housing.status = "unavailable";
+      }
+
       await housing.save({ transaction });
     }
 
@@ -151,6 +156,11 @@ const updateBookingStatus = async (req, res) => {
       ["cancelled", "rejected", "pending"].includes(status)
     ) {
       housing.available_rooms += 1;
+
+      if (housing.available_rooms > 0) {
+        housing.status = "available";
+      }
+
       await housing.save({ transaction });
     }
 
@@ -189,48 +199,27 @@ const updateBookingStatus = async (req, res) => {
 };
 
 const deleteBooking = async (req, res) => {
-  let transaction;
-
   try {
-    const { id } = req.params;
+    const { id } = req.params
 
-    transaction = await sequelize.transaction();
-
-    const booking = await Booking.findByPk(id, {
-      include: [{ model: Housing }],
-      transaction,
-      lock: transaction.LOCK.UPDATE,
-    });
+    const booking = await Booking.findByPk(id)
 
     if (!booking) {
-      await transaction.rollback();
       return res.status(404).json({
-        message: "Booking not found",
-      });
+        message: 'Booking not found',
+      })
     }
 
-    const housing = booking.Housing;
-
-    if (booking.status === "confirmed" && housing) {
-      housing.available_rooms += 1;
-      await housing.save({ transaction });
-    }
-
-    await booking.destroy({ transaction });
-    await transaction.commit();
+    await booking.destroy()
 
     return res.status(200).json({
-      message: "Booking deleted successfully",
-    });
+      message: 'Booking deleted successfully',
+    })
   } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
-
     return res.status(500).json({
-      message: "Failed to delete booking",
+      message: 'Failed to delete booking',
       error: error.message,
-    });
+    })
   }
 };
 
@@ -239,4 +228,4 @@ module.exports = {
   getBookingById,
   updateBookingStatus,
   deleteBooking,
-};
+}
