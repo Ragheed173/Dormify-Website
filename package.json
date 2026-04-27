@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon server/server.js",
+    "backend": "nodemon server/server.js",
     "frontend": "vite",
     "start": "node server/server.js"
   },
