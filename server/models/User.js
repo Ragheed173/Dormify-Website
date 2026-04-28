@@ -24,11 +24,15 @@ const User = sequelize.define(
       type: DataTypes.ENUM("student", "admin", "owner"),
       defaultValue: "student",
     },
+    google_id: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",
     timestamps: true,
-  }
+  },
 );
 
 module.exports = User;

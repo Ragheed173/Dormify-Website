@@ -9,6 +9,8 @@ import BookingConfirmationPage from './pages/BookingConfirmationPage'
 import StudentDashboard from './pages/StudentDashboard'
 import OwnerDashboard from './pages/OwnerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import AuthSuccess from './pages/AuthSuccess'
+
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
         <Route path="/housing/:id" element={<HousingDetailPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth-success" element={<AuthSuccess />} />
 
         <Route
           path="/booking/confirm/:id"

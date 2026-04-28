@@ -1,25 +1,53 @@
-const express = require("express");
-const cors = require("cors");
+const express = require("express")
+const cors = require("cors")
+const session = require("express-session")
+const passport = require("./config/passport")
 
-const authRoutes = require("./routes/authRoutes");
-const homeRoutes = require("./routes/homeRoutes");
-const housingRoutes = require("./routes/housingRoutes");
-const bookingRoutes = require("./routes/bookingRoutes");
-const studentRoutes = require("./routes/studentRoutes");
-const adminRoutes = require("./routes/adminRoutes");
-const ownerRoutes = require("./routes/ownerRoutes");
+const authRoutes = require("./routes/authRoutes")
+const homeRoutes = require("./routes/homeRoutes")
+const housingRoutes = require("./routes/housingRoutes")
+const bookingRoutes = require("./routes/bookingRoutes")
+const studentRoutes = require("./routes/studentRoutes")
+const adminRoutes = require("./routes/adminRoutes")
+const ownerRoutes = require("./routes/ownerRoutes")
 
-const errorMiddleware = require("./middleware/errorMiddleware");
+const errorMiddleware = require("./middleware/errorMiddleware")
 
-const app = express();
+const app = express()
 
-app.use(cors());
-app.use(express.json());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+)
+
+app.use(express.json())
+
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+)
+
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.get("/", (req, res) => {
-  res.json({ message: "Backend is running" });
-});
+  res.json({ message: "Backend is running" })
+})
 
+<<<<<<< HEAD
+app.use("/api/auth", authRoutes)
+app.use("/api/home", homeRoutes)
+app.use("/api/housings", housingRoutes)
+app.use("/api/bookings", bookingRoutes)
+app.use("/api/student", studentRoutes)
+app.use("/api/admin", adminRoutes)
+app.use("/api/owner", ownerRoutes)
+=======
 app.use("/api/auth", authRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api/housings", housingRoutes);
@@ -27,7 +55,8 @@ app.use("/api/bookings", bookingRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/owner", ownerRoutes);
+>>>>>>> origin/main
 
-app.use(errorMiddleware);
+app.use(errorMiddleware)
 
-module.exports = app;
+module.exports = app

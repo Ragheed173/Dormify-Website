@@ -54,7 +54,6 @@ function LoginPage() {
           </div>
         )}
 
-
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
             <label className="form-label fw-medium">Email Address</label>
@@ -100,6 +99,18 @@ function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="text-center my-3">
+          <span className="text-muted">or</span>
+        </div>
+
+        <a
+          href="http://localhost:5000/api/auth/google"
+          className="btn btn-outline-danger w-100 py-2 fw-bold"
+        >
+          <i className="bi bi-google me-2"></i>
+          Sign in with Google
+        </a>
 
         <p className="text-center text-muted mt-3 mb-0 small">
           Don't have an account?{' '}
