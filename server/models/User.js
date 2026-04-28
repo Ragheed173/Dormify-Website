@@ -25,14 +25,14 @@ const User = sequelize.define(
       defaultValue: "student",
     },
     google_id: {
-  type: DataTypes.STRING,
-  allowNull: true,
-},
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",
     timestamps: true,
-  }
+  },
 );
 
 module.exports = User;

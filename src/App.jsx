@@ -11,6 +11,7 @@ import OwnerDashboard from './pages/OwnerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AuthSuccess from './pages/AuthSuccess'
 
+
 function App() {
   return (
     <BrowserRouter>
