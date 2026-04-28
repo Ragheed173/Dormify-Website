@@ -17,7 +17,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   })
 )
@@ -39,7 +39,6 @@ app.get("/", (req, res) => {
   res.json({ message: "Backend is running" })
 })
 
-<<<<<<< HEAD
 app.use("/api/auth", authRoutes)
 app.use("/api/home", homeRoutes)
 app.use("/api/housings", housingRoutes)
@@ -47,15 +46,6 @@ app.use("/api/bookings", bookingRoutes)
 app.use("/api/student", studentRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/owner", ownerRoutes)
-=======
-app.use("/api/auth", authRoutes);
-app.use("/api/home", homeRoutes);
-app.use("/api/housings", housingRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/student", studentRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/owner", ownerRoutes);
->>>>>>> origin/main
 
 app.use(errorMiddleware)
 
