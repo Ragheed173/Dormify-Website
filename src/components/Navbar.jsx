@@ -12,8 +12,8 @@ function Navbar() {
 
   const getDashboardLink = () => {
     if (!user) return '/login'
-    if (user.role === 'admin')   return '/admin/dashboard'
-    if (user.role === 'owner')   return '/owner/dashboard'
+    if (user.role === 'admin') return '/admin/dashboard'
+    if (user.role === 'owner') return '/owner/dashboard'
     if (user.role === 'student') return '/student/dashboard'
     return '/'
   }
@@ -58,7 +58,11 @@ function Navbar() {
                   <i className="bi bi-speedometer2 me-1"></i>
                   Dashboard
                 </Link>
-                <span className="text-muted small">Hi, {user.name.split(' ')[0]}</span>
+
+                <span className="text-muted small">
+                  Hi, {(user?.name || user?.email.split('@')[0] || 'User').split(' ')[0]}
+                </span>
+
                 <button onClick={handleLogout} className="btn btn-danger btn-sm">
                   <i className="bi bi-box-arrow-right me-1"></i>
                   Logout

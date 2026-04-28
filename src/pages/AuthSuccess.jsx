@@ -20,6 +20,7 @@ function AuthSuccess() {
 
       const user = {
         id: payload.id,
+        name: payload.name || payload.email || 'User',
         email: payload.email,
         role: payload.role,
       }
