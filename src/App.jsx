@@ -1,24 +1,26 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
-import HomePage               from './pages/HomePage'
-import ListingsPage           from './pages/ListingsPage'
-import HousingDetailPage      from './pages/HousingDetailPage'
-import LoginPage              from './pages/Login'
-import RegisterPage           from './pages/Register'
+import HomePage from './pages/HomePage'
+import ListingsPage from './pages/ListingsPage'
+import HousingDetailPage from './pages/HousingDetailPage'
+import LoginPage from './pages/Login'
+import RegisterPage from './pages/Register'
 import BookingConfirmationPage from './pages/BookingConfirmationPage'
-import StudentDashboard       from './pages/StudentDashboard'
-import OwnerDashboard         from './pages/OwnerDashboard'
-import AdminDashboard         from './pages/AdminDashboard'
+import StudentDashboard from './pages/StudentDashboard'
+import OwnerDashboard from './pages/OwnerDashboard'
+import AdminDashboard from './pages/AdminDashboard'
+import AuthSuccess from './pages/AuthSuccess'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/"           element={<HomePage />} />
-        <Route path="/listings"   element={<ListingsPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/listings" element={<ListingsPage />} />
         <Route path="/housing/:id" element={<HousingDetailPage />} />
-        <Route path="/login"      element={<LoginPage />} />
-        <Route path="/register"   element={<RegisterPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/auth-success" element={<AuthSuccess />} />
 
         <Route
           path="/booking/confirm/:id"
@@ -56,13 +58,21 @@ function App() {
           }
         />
 
-        <Route path="*" element={
-          <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-            <h1 className="display-1 fw-bold text-primary">404</h1>
-            <p className="lead">Page not found</p>
-            <a href="/" className="btn btn-primary">Go Home</a>
-          </div>
-        } />
+        <Route
+          path="*"
+          element={
+            <div
+              className="d-flex flex-column align-items-center justify-content-center"
+              style={{ minHeight: '100vh' }}
+            >
+              <h1 className="display-1 fw-bold text-primary">404</h1>
+              <p className="lead">Page not found</p>
+              <Link to="/" className="btn btn-primary">
+                Go Home
+              </Link>
+            </div>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

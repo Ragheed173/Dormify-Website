@@ -24,6 +24,15 @@ const register = async (req, res) => {
       });
     }
 
+    const allowedRoles = ["student", "admin", "owner"];
+    const selectedRole = role || "student";
+
+    if (!allowedRoles.includes(selectedRole)) {
+      return res.status(400).json({
+        message: "Invalid role",
+      });
+    }
+
     const existingUser = await User.findOne({
       where: { email },
     });
@@ -41,7 +50,7 @@ const register = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
-      role: role || "student",
+      role: selectedRole,
     });
 
     const token = generateToken(user);

@@ -48,20 +48,20 @@ function HomePage() {
 
   const testimonials = [
     {
-      name: 'Lina Hasan',
-      university: 'Birzeit University',
+      name: 'Moayd Nasser',
+      university: 'An-Najah University',
       text: 'Dormify made finding housing so easy! I found my perfect apartment in just 2 days.',
       avatar: 'LH',
     },
     {
-      name: 'Omar Khalil',
+      name: 'Hamzah Thuqan',
       university: 'An-Najah University',
       text: 'The best platform for student housing. Very organized and the support team is amazing!',
       avatar: 'OK',
     },
     {
-      name: 'Sara Nasser',
-      university: 'Hebron University',
+      name: 'Ragheed Kamal',
+      university: 'An-Najah University',
       text: 'I love how I can filter exactly what I need. Found great housing within my budget!',
       avatar: 'SN',
     },

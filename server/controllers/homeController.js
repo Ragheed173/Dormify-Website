@@ -28,7 +28,8 @@ const getFeaturedHousings = async (req, res) => {
   try {
     const featuredHousings = await Housing.findAll({
       where: {
-        status: "available",
+        location: 'Nablus',
+        status: 'available',
       },
       include: [
         {

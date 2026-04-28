@@ -40,18 +40,6 @@ function Footer() {
             </ul>
           </div>
 
-          <div className="col-6 col-lg-2">
-            <h6 className="fw-bold mb-3">Company</h6>
-            <ul className="list-unstyled">
-              {['About Us', 'Contact', 'Privacy Policy', 'Terms of Use'].map((item) => (
-                <li key={item} className="mb-1">
-                  <a href="#" className="text-secondary text-decoration-none small">
-                    {item}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
 
           <div className="col-lg-4">
             <h6 className="fw-bold mb-3">Contact Us</h6>
@@ -59,7 +47,7 @@ function Footer() {
               <i className="bi bi-envelope me-2"></i>info@dormify.com
             </p>
             <p className="text-secondary small mb-1">
-              <i className="bi bi-telephone me-2"></i>+970 59 000 0000
+              <i className="bi bi-telephone me-2"></i>+972 59 553 3060
             </p>
             <p className="text-secondary small">
               <i className="bi bi-geo-alt me-2"></i>Palestine, West Bank
@@ -69,7 +57,7 @@ function Footer() {
 
         <hr className="border-secondary mt-4" />
         <p className="text-center text-secondary small mb-0">
-          © {new Date().getFullYear()} Dormify. All rights reserved. Built for CS students 🎓
+          © {new Date().getFullYear()} Dormify. All rights reserved. Built for students 🎓
         </p>
       </div>
     </footer>

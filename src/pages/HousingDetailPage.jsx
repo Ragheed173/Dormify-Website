@@ -1,169 +1,361 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import { mockHousings } from '../api/mockData'
-import { useAuth } from '../context/AuthContext'
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import api from "../api/axiosInstance";
 
 function HousingDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const { user } = useAuth()
-  const [housing, setHousing] = useState(null)
-  const [activeImg, setActiveImg] = useState(0)
-  const [selectedRoom, setSelectedRoom] = useState('single')
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [housing, setHousing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [selectedImage, setSelectedImage] = useState("");
+
+  const [form, setForm] = useState({
+    start_date: "",
+    end_date: "",
+    notes: "",
+  });
+
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const found = mockHousings.find((h) => h.id === parseInt(id))
-    setHousing(found)
-    window.scrollTo(0, 0)
-  }, [id])
+    const fetchHousing = async () => {
+      try {
+        setLoading(true);
+        setError("");
 
-  const handleBookNow = () => {
-    if (!user) {
-      navigate('/login')
-      return
-    }
-    if (user.role !== 'student') {
-      alert('Only students can book housing.')
-      return
-    }
-    navigate(`/booking/confirm/${id}`)
-  }
+        const res = await api.get(`/housings/${id}`);
+        const housingData = res.data?.data || null;
 
-  if (!housing) {
+        setHousing(housingData);
+
+        const firstImage =
+          housingData?.HousingImages?.[0]?.image_url ||
+          "https://via.placeholder.com/1200x700?text=No+Image";
+        setSelectedImage(firstImage);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load housing details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHousing();
+  }, [id]);
+
+  const images = useMemo(() => {
+    if (!housing?.HousingImages?.length) {
+      return ["https://via.placeholder.com/1200x700?text=No+Image"];
+    }
+    return housing.HousingImages.map((img) => img.image_url);
+  }, [housing]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleBooking = async (e) => {
+    e.preventDefault();
+
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    if (!form.start_date || !form.end_date) {
+      setError("Start date and end date are required");
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      setError("");
+      setSuccess("");
+
+      await api.post("/bookings", {
+        housing_id: Number(id),
+        start_date: form.start_date,
+        end_date: form.end_date,
+        notes: form.notes,
+      });
+
+      setSuccess("Booking created successfully");
+      setForm({
+        start_date: "",
+        end_date: "",
+        notes: "",
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to create booking");
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  const statusClass =
+    housing?.status === "available" ? "bg-success" : "bg-danger";
+
+  if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh' }}>
-        <div className="spinner-border text-primary"></div>
-      </div>
-    )
+      <>
+        <Navbar />
+        <div className="container py-5 text-center">
+          <div className="spinner-border text-primary" role="status"></div>
+          <p className="mt-3 text-muted mb-0">Loading housing details...</p>
+        </div>
+        <Footer />
+      </>
+    );
   }
 
-  const amenities = [
-    { icon: 'bi-wifi', label: 'WiFi', active: housing.wifi },
-    { icon: 'bi-p-square', label: 'Parking', active: housing.parking },
-    { icon: 'bi-snow', label: 'Air Conditioning', active: housing.ac },
-    { icon: 'bi-house-gear', label: 'Furnished', active: housing.furnished },
-    { icon: 'bi-droplet', label: 'Bathrooms', active: true },
-    { icon: 'bi-shield-check', label: '24/7 Security', active: true },
-  ]
+  if (error && !housing) {
+    return (
+      <>
+        <Navbar />
+        <div className="container py-5">
+          <div className="alert alert-danger">{error}</div>
+          <Link to="/listings" className="btn btn-outline-primary">
+            Back to Listings
+          </Link>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
 
-      <div className="container py-5">
-        <button className="btn btn-outline-secondary btn-sm mb-4" onClick={() => navigate(-1)}>
-          <i className="bi bi-arrow-left me-1"></i> Back to Listings
-        </button>
+      <section className="bg-primary text-white py-4">
+        <div className="container">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <p className="mb-1 small opacity-75">
+                <Link to="/" className="text-white text-decoration-none">
+                  Home
+                </Link>{" "}
+                /{" "}
+                <Link to="/listings" className="text-white text-decoration-none">
+                  Listings
+                </Link>{" "}
+                / Details
+              </p>
+              <h2 className="fw-bold mb-1">{housing?.title}</h2>
+              <p className="mb-0 opacity-75">
+                <i className="bi bi-geo-alt me-1"></i>
+                {housing?.location}
+              </p>
+            </div>
+
+            <div className="text-end">
+              <span className={`badge ${statusClass} px-3 py-2 text-capitalize`}>
+                {housing?.status}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="container py-4 py-lg-5">
+        {error && <div className="alert alert-danger">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
 
         <div className="row g-4">
-          <div className="col-lg-8">
-            <img
-              src={housing.images[activeImg]}
-              alt={housing.title}
-              className="w-100 rounded-3 shadow-sm mb-2"
-              style={{ height: '380px', objectFit: 'cover' }}
-            />
-            <div className="d-flex gap-2 mb-4">
-              {housing.images.map((img, idx) => (
+          <div className="col-12 col-lg-8">
+            <div className="card border-0 shadow-sm mb-4" style={{ borderRadius: "16px" }}>
+              <div className="overflow-hidden" style={{ borderRadius: "16px 16px 0 0" }}>
                 <img
-                  key={idx}
-                  src={img}
-                  alt={`view-${idx}`}
-                  className={`rounded-2 cursor-pointer border ${activeImg === idx ? 'border-primary border-2' : ''}`}
-                  style={{ width: '80px', height: '60px', objectFit: 'cover', cursor: 'pointer' }}
-                  onClick={() => setActiveImg(idx)}
+                  src={selectedImage}
+                  alt={housing?.title}
+                  className="w-100"
+                  style={{ height: "460px", objectFit: "cover" }}
                 />
-              ))}
-            </div>
+              </div>
 
-            <div className="d-flex justify-content-between align-items-start mb-2">
-              <h2 className="fw-bold">{housing.title}</h2>
-              <div className="text-warning fs-5">
-                <i className="bi bi-star-fill"></i>
-                <span className="text-dark ms-1 fw-bold">{housing.rating}</span>
-                <small className="text-muted">({housing.reviews})</small>
+              <div className="card-body p-3 p-md-4">
+                <div className="row g-3">
+                  {images.map((img, index) => (
+                    <div key={index} className="col-4 col-md-3">
+                      <img
+                        src={img}
+                        alt={`Housing ${index + 1}`}
+                        className={`w-100 border ${
+                          selectedImage === img ? "border-primary border-3" : "border-light"
+                        }`}
+                        style={{
+                          height: "90px",
+                          objectFit: "cover",
+                          borderRadius: "10px",
+                          cursor: "pointer",
+                        }}
+                        onClick={() => setSelectedImage(img)}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
-            <p className="text-muted mb-3">
-              <i className="bi bi-geo-alt-fill text-primary me-1"></i>
-              {housing.city}, {housing.area}
-            </p>
 
-            <hr />
+            <div className="card border-0 shadow-sm" style={{ borderRadius: "16px" }}>
+              <div className="card-body p-4">
+                <div className="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                  <div>
+                    <h3 className="fw-bold mb-2">{housing?.title}</h3>
+                    <p className="text-muted mb-0">
+                      <i className="bi bi-geo-alt me-1"></i>
+                      {housing?.location}
+                    </p>
+                  </div>
 
-            <h5 className="fw-bold mb-2">About this housing</h5>
-            <p className="text-muted">{housing.description}</p>
-
-            <h5 className="fw-bold mb-3 mt-4">Amenities</h5>
-            <div className="row g-2">
-              {amenities.map((a) => (
-                <div key={a.label} className="col-6 col-md-4">
-                  <div className={`d-flex align-items-center gap-2 p-2 rounded-2 ${a.active ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>
-                    <i className={`bi ${a.icon}`}></i>
-                    <span className="small">{a.label}</span>
-                    {a.active && <i className="bi bi-check-circle-fill ms-auto small"></i>}
+                  <div className="text-lg-end">
+                    <h3 className="fw-bold text-primary mb-0">${housing?.price}</h3>
+                    <small className="text-muted">per stay</small>
                   </div>
                 </div>
-              ))}
+
+                <div className="row g-2 mb-4">
+                  <div className="col-6 col-md-3">
+                    <div className="border rounded-3 p-3 h-100 bg-light">
+                      <div className="small text-muted mb-1">Room Type</div>
+                      <div className="fw-semibold text-capitalize">{housing?.room_type}</div>
+                    </div>
+                  </div>
+
+                  <div className="col-6 col-md-3">
+                    <div className="border rounded-3 p-3 h-100 bg-light">
+                      <div className="small text-muted mb-1">Gender</div>
+                      <div className="fw-semibold text-capitalize">
+                        {housing?.gender_allowed}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-6 col-md-3">
+                    <div className="border rounded-3 p-3 h-100 bg-light">
+                      <div className="small text-muted mb-1">Available Rooms</div>
+                      <div className="fw-semibold">{housing?.available_rooms}</div>
+                    </div>
+                  </div>
+
+                  <div className="col-6 col-md-3">
+                    <div className="border rounded-3 p-3 h-100 bg-light">
+                      <div className="small text-muted mb-1">Status</div>
+                      <div className="fw-semibold text-capitalize">{housing?.status}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <h5 className="fw-bold mb-3">Description</h5>
+                <p className="text-muted mb-0" style={{ lineHeight: "1.8" }}>
+                  {housing?.description || "No description available for this housing."}
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="col-lg-4">
-            <div className="card border-0 shadow p-4 sticky-top" style={{ top: '80px' }}>
-              <h4 className="fw-bold text-primary mb-1">${housing.price}<small className="text-muted fs-6 fw-normal">/night</small></h4>
-              <p className="text-muted small mb-3">
-                <i className="bi bi-door-open me-1"></i>{housing.rooms} Rooms Â·
-                <i className="bi bi-droplet ms-2 me-1"></i>{housing.bathrooms} Bath
-              </p>
+          <div className="col-12 col-lg-4">
+            <div
+              className="card border-0 shadow-sm position-sticky"
+              style={{ top: "90px", borderRadius: "16px" }}
+            >
+              <div className="card-body p-4">
+                <div className="mb-4">
+                  <h4 className="fw-bold mb-1">Book this housing</h4>
+                  <p className="text-muted small mb-0">
+                    Choose your dates and send your booking request.
+                  </p>
+                </div>
 
-              <hr />
-
-              <h6 className="fw-bold mb-2">Select Room Type</h6>
-              {[
-                { value: 'single', label: 'Single Room', price: housing.price * 0.6 },
-                { value: 'double', label: 'Double Room', price: housing.price * 0.8 },
-                { value: 'master', label: 'Master Room', price: housing.price },
-              ].map((r) => (
-                <div
-                  key={r.value}
-                  className={`d-flex justify-content-between align-items-center p-2 rounded-2 mb-2 border ${selectedRoom === r.value ? 'border-primary bg-primary bg-opacity-10' : ''}`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => setSelectedRoom(r.value)}
-                >
-                  <div className="d-flex align-items-center gap-2">
-                    <input type="radio" checked={selectedRoom === r.value} onChange={() => setSelectedRoom(r.value)} />
-                    <span className="small fw-medium">{r.label}</span>
+                {!token && (
+                  <div className="alert alert-warning small">
+                    You need to{" "}
+                    <Link to="/login" className="fw-semibold">
+                      log in
+                    </Link>{" "}
+                    before booking.
                   </div>
-                  <span className="text-primary fw-bold small">${r.price.toFixed(0)}/night</span>
+                )}
+
+                <form onSubmit={handleBooking}>
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">Start Date</label>
+                    <input
+                      type="date"
+                      name="start_date"
+                      className="form-control"
+                      value={form.start_date}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label fw-medium">End Date</label>
+                    <input
+                      type="date"
+                      name="end_date"
+                      className="form-control"
+                      value={form.end_date}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="form-label fw-medium">Notes</label>
+                    <textarea
+                      name="notes"
+                      className="form-control"
+                      rows="4"
+                      placeholder="Write any notes for the booking..."
+                      value={form.notes}
+                      onChange={handleChange}
+                    ></textarea>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 py-2 fw-bold"
+                    disabled={bookingLoading || housing?.status !== "available"}
+                  >
+                    {bookingLoading
+                      ? "Booking..."
+                      : housing?.status !== "available"
+                      ? "Not Available"
+                      : "Book Now"}
+                  </button>
+                </form>
+
+                <hr className="my-4" />
+
+                <div className="small text-muted">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Price</span>
+                    <span className="fw-semibold text-dark">${housing?.price}</span>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span>Room Type</span>
+                    <span className="fw-semibold text-dark text-capitalize">
+                      {housing?.room_type}
+                    </span>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <span>Available Rooms</span>
+                    <span className="fw-semibold text-dark">
+                      {housing?.available_rooms}
+                    </span>
+                  </div>
                 </div>
-              ))}
-
-              <hr />
-
-              <button className="btn btn-primary w-100 py-2 fw-bold" onClick={handleBookNow}>
-                <i className="bi bi-calendar-check me-2"></i>Book Now
-              </button>
-              <p className="text-muted text-center small mt-2 mb-0">
-                <i className="bi bi-shield-check me-1 text-success"></i>
-                Free cancellation within 24 hours
-              </p>
-
-              <hr />
-
-              <div className="d-flex align-items-center gap-2">
-                <div className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
-                  style={{ width: '40px', height: '40px', fontSize: '12px' }}>
-                  KO
-                </div>
-                <div>
-                  <p className="mb-0 small fw-bold">{housing.owner}</p>
-                  <p className="mb-0 small text-muted">Property Owner</p>
-                </div>
-                <button className="btn btn-outline-primary btn-sm ms-auto">
-                  <i className="bi bi-chat-dots me-1"></i>Contact
-                </button>
               </div>
             </div>
           </div>
@@ -172,7 +364,7 @@ function HousingDetailPage() {
 
       <Footer />
     </>
-  )
+  );
 }
 
-export default HousingDetailPage
+export default HousingDetailPage;

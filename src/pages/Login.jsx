@@ -22,11 +22,9 @@ function LoginPage() {
     const result = await login(form.email, form.password)
 
     if (result.success) {
-      if (result.role === 'admin') {
-        navigate('/admin/dashboard')
-      } else {
-        navigate('/student/dashboard')
-      }
+      if (result.role === 'admin') navigate('/admin/dashboard')
+      else if (result.role === 'owner') navigate('/owner/dashboard')
+      else navigate('/student/dashboard')
     } else {
       setError(result.message)
     }
@@ -55,12 +53,6 @@ function LoginPage() {
             <span>{error}</span>
           </div>
         )}
-
-        <div className="alert alert-info small mb-3">
-          <strong>Demo accounts:</strong><br />
-          student@dormify.com / student123<br />
-          admin@dormify.com / admin123
-        </div>
 
         <form onSubmit={handleSubmit} noValidate>
           <div className="mb-3">
@@ -107,6 +99,18 @@ function LoginPage() {
             )}
           </button>
         </form>
+
+        <div className="text-center my-3">
+          <span className="text-muted">or</span>
+        </div>
+
+        <a
+          href="http://localhost:5000/api/auth/google"
+          className="btn btn-outline-danger w-100 py-2 fw-bold"
+        >
+          <i className="bi bi-google me-2"></i>
+          Sign in with Google
+        </a>
 
         <p className="text-center text-muted mt-3 mb-0 small">
           Don't have an account?{' '}

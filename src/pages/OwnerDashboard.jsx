@@ -1,392 +1,849 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { mockHousings, mockBookings, mockPayments, mockMaintenanceReports } from '../api/mockData'
+import api from '../api/axiosInstance'
+import { Link, useNavigate } from 'react-router-dom'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('listings')
-  const [showModal, setShowModal] = useState(false)
-  const [newListing, setNewListing] = useState({
-    title: '', city: '', area: '', price: '', rooms: '',
-    bathrooms: '', description: '', wifi: false,
+
+  const [activeSection, setActiveSection] = useState('overview')
+
+  const [profile, setProfile] = useState(null)
+  const [housings, setHousings] = useState([])
+  const [bookings, setBookings] = useState([])
+
+  const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
+  const [housingLoading, setHousingLoading] = useState(false)
+  const [deleteLoadingId, setDeleteLoadingId] = useState(null)
+  const [bookingActionId, setBookingActionId] = useState(null)
+
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  const [profileForm, setProfileForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
   })
-  const [listings, setListings] = useState(mockHousings.slice(0, 3))
 
-  const handleLogout = () => { logout(); navigate('/') }
-
-  const handleAddListing = (e) => {
-    e.preventDefault()
-    const newItem = {
-      ...newListing,
-      id: Date.now(),
-      price: parseInt(newListing.price),
-      rooms: parseInt(newListing.rooms),
-      bathrooms: parseInt(newListing.bathrooms),
-      image: `https://picsum.photos/600/400?random=${Date.now()}`,
-      images: [`https://picsum.photos/600/400?random=${Date.now()}`],
-      status: 'Available',
-      owner: user?.name,
-      rating: 0,
-      reviews: 0,
-    }
-    setListings([...listings, newItem])
-    setShowModal(false)
-    setNewListing({ title: '', city: '', area: '', price: '', rooms: '', bathrooms: '', description: '', wifi: false })
+  const emptyHousingForm = {
+    title: '',
+    description: '',
+    location: '',
+    price: '',
+    gender_allowed: 'both',
+    room_type: 'single',
+    available_rooms: '',
+    status: 'available',
+    image_urls: '',
   }
 
-  const statusBadge = (status) => {
-    if (status === 'Confirmed' || status === 'Available') return 'success'
-    if (status === 'Pending')     return 'warning'
-    if (status === 'Cancelled')   return 'danger'
-    if (status === 'Paid')        return 'success'
-    if (status === 'Resolved')    return 'success'
-    if (status === 'In Progress') return 'warning'
-    if (status === 'Open')        return 'danger'
-    if (status === 'Booked')      return 'info'
+  const [housingForm, setHousingForm] = useState(emptyHousingForm)
+  const [editingHousingId, setEditingHousingId] = useState(null)
+
+  const fetchOwnerData = async () => {
+    try {
+      setLoading(true)
+      setError('')
+
+      const [profileRes, housingsRes, bookingsRes] = await Promise.all([
+        api.get('/owner/profile'),
+        api.get('/owner/housings'),
+        api.get('/owner/bookings'),
+      ])
+
+      const ownerProfile = profileRes.data?.data || null
+      const ownerHousings = housingsRes.data?.data || []
+      const ownerBookings = bookingsRes.data?.data || []
+
+      setProfile(ownerProfile)
+      setProfileForm({
+        name: ownerProfile?.name || '',
+        email: ownerProfile?.email || '',
+        phone: ownerProfile?.phone || '',
+      })
+
+      setHousings(ownerHousings)
+      setBookings(ownerBookings)
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load owner dashboard')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchOwnerData()
+  }, [])
+
+  const totalRevenue = useMemo(() => {
+    return bookings
+      .filter((booking) => booking.status === 'confirmed')
+      .reduce((sum, booking) => sum + Number(booking.Housing?.price || 0), 0)
+  }, [bookings])
+
+  const pendingBookings = useMemo(() => {
+    return bookings.filter((booking) => booking.status === 'pending').length
+  }, [bookings])
+
+  const confirmedBookings = useMemo(() => {
+    return bookings.filter((booking) => booking.status === 'confirmed').length
+  }, [bookings])
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target
+    setProfileForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleHousingChange = (e) => {
+    const { name, value } = e.target
+    setHousingForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleProfileUpdate = async (e) => {
+    e.preventDefault()
+
+    try {
+      setProfileLoading(true)
+      setError('')
+      setSuccess('')
+
+      const res = await api.put('/owner/profile', profileForm)
+      const updatedProfile = res.data?.data || null
+
+      setProfile(updatedProfile)
+      setProfileForm({
+        name: updatedProfile?.name || '',
+        email: updatedProfile?.email || '',
+        phone: updatedProfile?.phone || '',
+      })
+
+      localStorage.setItem('dormify_user', JSON.stringify(updatedProfile))
+      setSuccess('Profile updated successfully')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile')
+    } finally {
+      setProfileLoading(false)
+    }
+  }
+
+  const resetHousingForm = () => {
+    setHousingForm(emptyHousingForm)
+    setEditingHousingId(null)
+  }
+
+  const handleHousingSubmit = async (e) => {
+    e.preventDefault()
+
+    try {
+      setHousingLoading(true)
+      setError('')
+      setSuccess('')
+
+      const payload = {
+        title: housingForm.title,
+        description: housingForm.description,
+        location: housingForm.location,
+        price: Number(housingForm.price),
+        gender_allowed: housingForm.gender_allowed,
+        room_type: housingForm.room_type,
+        available_rooms: Number(housingForm.available_rooms),
+        status: housingForm.status,
+        image_urls: housingForm.image_urls
+          .split('\n')
+          .map((item) => item.trim())
+          .filter(Boolean),
+      }
+
+      if (editingHousingId) {
+        await api.put(`/owner/housings/${editingHousingId}`, payload)
+        setSuccess('Housing updated successfully')
+      } else {
+        await api.post('/owner/housings', payload)
+        setSuccess('Housing created successfully')
+      }
+
+      resetHousingForm()
+      await fetchOwnerData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save housing')
+    } finally {
+      setHousingLoading(false)
+    }
+  }
+
+  const handleEditHousing = (housing) => {
+    setEditingHousingId(housing.id)
+    setHousingForm({
+      title: housing.title || '',
+      description: housing.description || '',
+      location: housing.location || '',
+      price: housing.price || '',
+      gender_allowed: housing.gender_allowed || 'both',
+      room_type: housing.room_type || 'single',
+      available_rooms: housing.available_rooms || '',
+      status: housing.status || 'available',
+      image_urls: (housing.HousingImages || [])
+        .map((img) => img.image_url)
+        .join('\n'),
+    })
+
+    setActiveSection('housings')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDeleteHousing = async (housingId) => {
+    const confirmed = window.confirm('Are you sure you want to delete this housing?')
+    if (!confirmed) return
+
+    try {
+      setDeleteLoadingId(housingId)
+      setError('')
+      setSuccess('')
+
+      await api.delete(`/owner/housings/${housingId}`)
+      setSuccess('Housing deleted successfully')
+      await fetchOwnerData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete housing')
+    } finally {
+      setDeleteLoadingId(null)
+    }
+  }
+
+  const handleBookingStatusUpdate = async (bookingId, status) => {
+    try {
+      setBookingActionId(bookingId)
+      setError('')
+      setSuccess('')
+
+      await api.patch(`/owner/bookings/${bookingId}/status`, { status })
+
+      setSuccess(
+        status === 'confirmed'
+          ? 'تمت الموافقة على طلب الحجز بنجاح'
+          : status === 'rejected'
+            ? 'تم رفض طلب الحجز'
+            : 'تم تحديث حالة الحجز'
+      )
+
+      await fetchOwnerData()
+    } catch (err) {
+      setError(err.response?.data?.message || 'فشل في تحديث حالة الحجز')
+    } finally {
+      setBookingActionId(null)
+    }
+  }
+
+  const statusBadgeClass = (status) => {
+    const normalized = String(status).toLowerCase()
+
+    if (normalized === 'confirmed') return 'success'
+    if (normalized === 'pending') return 'warning'
+    if (normalized === 'cancelled') return 'danger'
+    if (normalized === 'rejected') return 'secondary'
+    if (normalized === 'available') return 'success'
+    if (normalized === 'unavailable') return 'danger'
+
     return 'secondary'
   }
 
-  const navItems = [
-    { key: 'listings',     icon: 'bi-houses',       label: 'My Listings' },
-    { key: 'bookings',     icon: 'bi-calendar-check', label: 'Bookings' },
-    { key: 'payments',     icon: 'bi-cash-stack',   label: 'Payments' },
-    { key: 'maintenance',  icon: 'bi-tools',        label: 'Maintenance' },
-    { key: 'settings',     icon: 'bi-gear',         label: 'Settings' },
-  ]
+  const navigate = useNavigate()
 
-  return (
-    <div className="d-flex min-vh-100 bg-light">
+  const handleLogout = () => {
+    logout()
+    navigate('/')
+  }
 
-      <div className="bg-white shadow-sm d-flex flex-column"
-        style={{ width: '250px', minWidth: '250px', padding: '24px 16px' }}>
-        <div className="mb-4 px-2">
-          <h5 className="fw-bold text-primary mb-0">
-            <i className="bi bi-house-heart-fill me-2"></i>Dormify
-          </h5>
-          <small className="text-muted">Owner Panel</small>
-        </div>
-
-        <div className="d-flex align-items-center gap-2 bg-light rounded-2 p-2 mb-4">
-          <div className="rounded-circle bg-success text-white d-flex align-items-center justify-content-center fw-bold"
-            style={{ width: '40px', height: '40px', fontSize: '12px', flexShrink: 0 }}>
-            {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase()}
-          </div>
-          <div style={{ overflow: 'hidden' }}>
-            <p className="mb-0 small fw-bold text-truncate">{user?.name}</p>
-            <span className="badge bg-success-subtle text-success" style={{ fontSize: '10px' }}>Owner</span>
-          </div>
-        </div>
-
-        <nav className="sidebar-nav flex-grow-1">
-          {navItems.map((item) => (
-            <button key={item.key}
-              className={`nav-link w-100 text-start d-flex align-items-center gap-2 ${activeTab === item.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.key)}>
-              <i className={`bi ${item.icon}`}></i>{item.label}
-            </button>
-          ))}
-        </nav>
-
-        <button className="btn btn-outline-danger btn-sm mt-3 d-flex align-items-center gap-2"
-          onClick={handleLogout}>
-          <i className="bi bi-box-arrow-right"></i>Logout
-        </button>
+  const renderOverview = () => (
+    <>
+      <div className="mb-4">
+        <h1 className="fw-bold">Welcome back, {profile?.name || user?.name || 'Owner'}</h1>
+        <p className="text-muted mb-0">
+          Manage your profile, housings, and booking requests from one place.
+        </p>
       </div>
 
-      <div className="flex-grow-1 p-4" style={{ overflowY: 'auto' }}>
-
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h4 className="fw-bold mb-0">{navItems.find(n => n.key === activeTab)?.label}</h4>
-            <small className="text-muted">Manage your properties</small>
+      <div className="row g-4 mb-4">
+        <div className="col-12 col-md-6 col-xl-3">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">My Housings</div>
+              <h2 className="fw-bold mb-0">{housings.length}</h2>
+            </div>
           </div>
         </div>
 
-        {activeTab === 'listings' && (
-          <>
-            <div className="row g-3 mb-4">
-              {[
-                { label: 'Total Listings',  value: listings.length,   icon: 'bi-houses',       color: 'primary' },
-                { label: 'Active Bookings', value: 12,                icon: 'bi-calendar-check', color: 'success' },
-                { label: 'Total Revenue',   value: '$2,400',          icon: 'bi-cash-stack',   color: 'warning' },
-              ].map((s) => (
-                <div key={s.label} className="col-12 col-sm-4">
-                  <div className="stat-card p-3 d-flex align-items-center gap-3">
-                    <div className={`bg-${s.color} bg-opacity-10 rounded-2 p-2`}>
-                      <i className={`bi ${s.icon} text-${s.color} fs-5`}></i>
-                    </div>
-                    <div>
-                      <p className="text-muted small mb-0">{s.label}</p>
-                      <h5 className="fw-bold mb-0">{s.value}</h5>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        <div className="col-12 col-md-6 col-xl-3">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">All Booking Requests</div>
+              <h2 className="fw-bold mb-0">{bookings.length}</h2>
             </div>
+          </div>
+        </div>
 
-            <div className="card border-0 shadow-sm">
-              <div className="card-header bg-white d-flex justify-content-between align-items-center">
-                <span className="fw-bold">My Properties</span>
-                <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
-                  <i className="bi bi-plus-lg me-1"></i>Add New Listing
-                </button>
-              </div>
-              <div className="card-body p-0">
+        <div className="col-12 col-md-6 col-xl-3">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">Pending Requests</div>
+              <h2 className="fw-bold mb-0">{pendingBookings}</h2>
+            </div>
+          </div>
+        </div>
+
+        <div className="col-12 col-md-6 col-xl-3">
+          <div className="card border-0 shadow-sm h-100">
+            <div className="card-body">
+              <div className="text-muted small">Confirmed Revenue</div>
+              <h2 className="fw-bold mb-0">${totalRevenue}</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-4">
+        <div className="col-12 col-lg-7">
+          <div className="card border-0 shadow-sm">
+            <div className="card-header bg-white fw-bold">Recent Requests</div>
+            <div className="card-body p-0">
+              {bookings.length === 0 ? (
+                <div className="text-center py-5 text-muted">No bookings found</div>
+              ) : (
                 <div className="table-responsive">
                   <table className="table table-hover mb-0">
                     <thead className="table-light">
                       <tr>
-                        <th>Housing Name</th><th>City</th><th>Price/night</th>
-                        <th>Rooms</th><th>Status</th><th>Actions</th>
+                        <th>Student</th>
+                        <th>Housing</th>
+                        <th>Location</th>
+                        <th>Status</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {listings.map((h) => (
-                        <tr key={h.id}>
-                          <td className="fw-medium">{h.title}</td>
-                          <td className="text-muted">{h.city}</td>
-                          <td className="text-primary fw-bold">${h.price}</td>
-                          <td>{h.rooms}</td>
-                          <td><span className={`badge bg-${statusBadge(h.status || 'Available')}`}>{h.status || 'Available'}</span></td>
+                      {bookings.slice(0, 5).map((booking) => (
+                        <tr key={booking.id}>
+                          <td>{booking.User?.name || 'N/A'}</td>
+                          <td>{booking.Housing?.title || 'N/A'}</td>
+                          <td>{booking.Housing?.location || 'N/A'}</td>
                           <td>
-                            <div className="d-flex gap-1">
-                              <button className="btn btn-outline-primary btn-sm">
-                                <i className="bi bi-pencil"></i>
-                              </button>
-                              <button className="btn btn-outline-danger btn-sm"
-                                onClick={() => setListings(listings.filter(l => l.id !== h.id))}>
-                                <i className="bi bi-trash"></i>
-                              </button>
-                            </div>
+                            <span className={`badge bg-${statusBadgeClass(booking.status)}`}>
+                              {booking.status}
+                            </span>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+              )}
             </div>
-          </>
-        )}
+          </div>
+        </div>
 
-        {activeTab === 'bookings' && (
+        <div className="col-12 col-lg-5">
           <div className="card border-0 shadow-sm">
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Student</th><th>Housing</th><th>Room Type</th>
-                      <th>Check In</th><th>Check Out</th><th>Amount</th><th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockBookings.map((b) => (
-                      <tr key={b.id}>
-                        <td className="fw-medium">{b.student}</td>
-                        <td>{b.housingName}</td>
-                        <td className="text-muted small">{b.roomType}</td>
-                        <td className="text-muted small">{b.checkIn}</td>
-                        <td className="text-muted small">{b.checkOut}</td>
-                        <td className="fw-bold text-primary">${b.amount}</td>
-                        <td><span className={`badge bg-${statusBadge(b.status)}`}>{b.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="card-header bg-white fw-bold">Quick Stats</div>
+            <div className="card-body">
+              <div className="mb-3 d-flex justify-content-between">
+                <span>Total Pending Requests</span>
+                <strong>{pendingBookings}</strong>
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'payments' && (
-          <>
-            <div className="row g-3 mb-4">
-              {[
-                { label: 'Total Received', value: '$1,800', color: 'success' },
-                { label: 'Pending',        value: '$200',   color: 'warning' },
-                { label: 'This Month',     value: '$600',   color: 'primary' },
-              ].map((s) => (
-                <div key={s.label} className="col-12 col-sm-4">
-                  <div className="stat-card p-3">
-                    <p className="text-muted small mb-1">{s.label}</p>
-                    <h4 className={`fw-bold text-${s.color} mb-0`}>{s.value}</h4>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="card border-0 shadow-sm">
-              <div className="card-body p-0">
-                <div className="table-responsive">
-                  <table className="table table-hover mb-0">
-                    <thead className="table-light">
-                      <tr><th>Date</th><th>Student</th><th>Housing</th><th>Amount</th><th>Method</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>
-                      {mockPayments.map((p) => (
-                        <tr key={p.id}>
-                          <td className="text-muted small">{p.date}</td>
-                          <td>Ahmad Student</td>
-                          <td>{p.housing}</td>
-                          <td className="fw-bold">${p.amount}</td>
-                          <td>{p.method}</td>
-                          <td><span className={`badge bg-${statusBadge(p.status)}`}>{p.status}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="mb-3 d-flex justify-content-between">
+                <span>Total Confirmed Bookings</span>
+                <strong>{confirmedBookings}</strong>
               </div>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'maintenance' && (
-          <div className="card border-0 shadow-sm">
-            <div className="card-body p-0">
-              <div className="table-responsive">
-                <table className="table table-hover mb-0">
-                  <thead className="table-light">
-                    <tr><th>Title</th><th>Student</th><th>Housing</th><th>Type</th><th>Date</th><th>Status</th><th>Update</th></tr>
-                  </thead>
-                  <tbody>
-                    {mockMaintenanceReports.map((r) => (
-                      <tr key={r.id}>
-                        <td className="fw-medium">{r.title}</td>
-                        <td className="text-muted">{r.student}</td>
-                        <td>{r.housing}</td>
-                        <td><span className="badge bg-light text-dark border">{r.type}</span></td>
-                        <td className="text-muted small">{r.date}</td>
-                        <td><span className={`badge bg-${statusBadge(r.status)}`}>{r.status}</span></td>
-                        <td>
-                          <select className="form-select form-select-sm" style={{ width: 'auto' }}>
-                            <option>Open</option>
-                            <option>In Progress</option>
-                            <option>Resolved</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="mb-3 d-flex justify-content-between">
+                <span>Available Housings</span>
+                <strong>{housings.filter((h) => h.status === 'available').length}</strong>
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'settings' && (
-          <div className="card border-0 shadow-sm p-4" style={{ maxWidth: '500px' }}>
-            <h6 className="fw-bold mb-4">Account Settings</h6>
-            <div className="mb-3">
-              <label className="form-label small fw-medium">Full Name</label>
-              <input type="text" className="form-control" defaultValue={user?.name} />
-            </div>
-            <div className="mb-3">
-              <label className="form-label small fw-medium">Email</label>
-              <input type="email" className="form-control" defaultValue={user?.email} />
-            </div>
-            <div className="mb-4">
-              <label className="form-label small fw-medium">Phone</label>
-              <input type="text" className="form-control" placeholder="+970 59 000 0000" />
-            </div>
-            <button className="btn btn-primary">
-              <i className="bi bi-check2 me-2"></i>Save Changes
-            </button>
-          </div>
-        )}
-      </div>
-
-      {showModal && (
-        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-lg modal-dialog-centered">
-            <div className="modal-content border-0 shadow-lg">
-              <div className="modal-header border-0">
-                <h5 className="modal-title fw-bold">Add New Listing</h5>
-                <button className="btn-close" onClick={() => setShowModal(false)}></button>
-              </div>
-              <div className="modal-body">
-                <form id="addListingForm" onSubmit={handleAddListing}>
-                  <div className="row g-3">
-                    <div className="col-md-8">
-                      <label className="form-label small fw-medium">Housing Title *</label>
-                      <input type="text" className="form-control" required
-                        placeholder="e.g. Modern Apartment near University"
-                        value={newListing.title}
-                        onChange={(e) => setNewListing({ ...newListing, title: e.target.value })} />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label small fw-medium">Price / Night ($) *</label>
-                      <input type="number" className="form-control" required
-                        placeholder="e.g. 150"
-                        value={newListing.price}
-                        onChange={(e) => setNewListing({ ...newListing, price: e.target.value })} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-medium">City *</label>
-                      <select className="form-select" required
-                        value={newListing.city}
-                        onChange={(e) => setNewListing({ ...newListing, city: e.target.value })}>
-                        <option value="">Select City</option>
-                        {['Ramallah', 'Nablus', 'Hebron', 'Jenin', 'Tulkarm'].map(c => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-medium">Area / Neighborhood</label>
-                      <input type="text" className="form-control"
-                        placeholder="e.g. Al-Bireh"
-                        value={newListing.area}
-                        onChange={(e) => setNewListing({ ...newListing, area: e.target.value })} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-medium">Number of Rooms *</label>
-                      <input type="number" className="form-control" required min="1"
-                        value={newListing.rooms}
-                        onChange={(e) => setNewListing({ ...newListing, rooms: e.target.value })} />
-                    </div>
-                    <div className="col-md-6">
-                      <label className="form-label small fw-medium">Bathrooms *</label>
-                      <input type="number" className="form-control" required min="1"
-                        value={newListing.bathrooms}
-                        onChange={(e) => setNewListing({ ...newListing, bathrooms: e.target.value })} />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label small fw-medium">Description</label>
-                      <textarea className="form-control" rows="3"
-                        placeholder="Describe your property..."
-                        value={newListing.description}
-                        onChange={(e) => setNewListing({ ...newListing, description: e.target.value })}></textarea>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label small fw-medium d-block">Upload Images</label>
-                      <input type="file" className="form-control" accept="image/*" multiple />
-                    </div>
-                    <div className="col-12">
-                      <div className="form-check">
-                        <input className="form-check-input" type="checkbox" id="wifiCheck"
-                          checked={newListing.wifi}
-                          onChange={(e) => setNewListing({ ...newListing, wifi: e.target.checked })} />
-                        <label className="form-check-label small" htmlFor="wifiCheck">
-                          <i className="bi bi-wifi me-1"></i> WiFi Included
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer border-0">
-                <button className="btn btn-light" onClick={() => setShowModal(false)}>Cancel</button>
-                <button className="btn btn-primary" form="addListingForm" type="submit">
-                  <i className="bi bi-plus-lg me-1"></i>Add Listing
-                </button>
+              <div className="d-flex justify-content-between">
+                <span>Unavailable Housings</span>
+                <strong>{housings.filter((h) => h.status === 'unavailable').length}</strong>
               </div>
             </div>
           </div>
         </div>
-      )}
+      </div>
+    </>
+  )
+
+  const renderProfile = () => (
+    <div className="card border-0 shadow-sm">
+      <div className="card-header bg-white fw-bold">My Profile</div>
+      <div className="card-body" style={{ maxWidth: '700px' }}>
+        <form onSubmit={handleProfileUpdate}>
+          <div className="row g-3">
+            <div className="col-md-4">
+              <label className="form-label">Name</label>
+              <input
+                type="text"
+                name="name"
+                className="form-control"
+                value={profileForm.name}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                name="email"
+                className="form-control"
+                value={profileForm.email}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Phone</label>
+              <input
+                type="text"
+                name="phone"
+                className="form-control"
+                value={profileForm.phone}
+                onChange={handleProfileChange}
+              />
+            </div>
+
+            <div className="col-12">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={profileLoading}
+              >
+                {profileLoading ? 'Saving...' : 'Update Profile'}
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+
+  const renderHousings = () => (
+    <>
+      <div className="card border-0 shadow-sm mb-4">
+        <div className="card-header bg-white fw-bold">
+          {editingHousingId ? 'Edit Housing' : 'Add New Housing'}
+        </div>
+        <div className="card-body">
+          <form onSubmit={handleHousingSubmit}>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label className="form-label">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  className="form-control"
+                  value={housingForm.title}
+                  onChange={handleHousingChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-6">
+                <label className="form-label">Location</label>
+                <input
+                  type="text"
+                  name="location"
+                  className="form-control"
+                  value={housingForm.location}
+                  onChange={handleHousingChange}
+                  required
+                />
+              </div>
+
+              <div className="col-12">
+                <label className="form-label">Description</label>
+                <textarea
+                  name="description"
+                  className="form-control"
+                  rows="3"
+                  value={housingForm.description}
+                  onChange={handleHousingChange}
+                ></textarea>
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Price</label>
+                <input
+                  type="number"
+                  name="price"
+                  className="form-control"
+                  value={housingForm.price}
+                  onChange={handleHousingChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Available Rooms</label>
+                <input
+                  type="number"
+                  name="available_rooms"
+                  className="form-control"
+                  value={housingForm.available_rooms}
+                  onChange={handleHousingChange}
+                  required
+                />
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Gender</label>
+                <select
+                  name="gender_allowed"
+                  className="form-select"
+                  value={housingForm.gender_allowed}
+                  onChange={handleHousingChange}
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="both">Both</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Room Type</label>
+                <select
+                  name="room_type"
+                  className="form-select"
+                  value={housingForm.room_type}
+                  onChange={handleHousingChange}
+                >
+                  <option value="single">Single</option>
+                  <option value="double">Double</option>
+                  <option value="triple">Triple</option>
+                </select>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Status</label>
+                <select
+                  name="status"
+                  className="form-select"
+                  value={housingForm.status}
+                  onChange={handleHousingChange}
+                >
+                  <option value="available">Available</option>
+                  <option value="unavailable">Unavailable</option>
+                </select>
+              </div>
+
+              <div className="col-12">
+                <label className="form-label">Image URLs</label>
+                <textarea
+                  name="image_urls"
+                  className="form-control"
+                  rows="4"
+                  placeholder="One image URL per line"
+                  value={housingForm.image_urls}
+                  onChange={handleHousingChange}
+                ></textarea>
+              </div>
+
+              <div className="col-12 d-flex gap-2">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={housingLoading}
+                >
+                  {housingLoading
+                    ? 'Saving...'
+                    : editingHousingId
+                      ? 'Update Housing'
+                      : 'Add Housing'}
+                </button>
+
+                {editingHousingId && (
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={resetHousingForm}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div className="card border-0 shadow-sm">
+        <div className="card-header bg-white fw-bold">My Housings</div>
+        <div className="card-body">
+          {housings.length === 0 ? (
+            <div className="text-center text-muted py-4">No housings found</div>
+          ) : (
+            <div className="row g-4">
+              {housings.map((housing) => (
+                <div key={housing.id} className="col-12 col-md-6">
+                  <div className="card border shadow-sm h-100">
+                    <img
+                      src={
+                        housing.HousingImages?.[0]?.image_url ||
+                        'https://via.placeholder.com/600x300?text=No+Image'
+                      }
+                      alt={housing.title}
+                      className="w-100"
+                      style={{
+                        height: '200px',
+                        objectFit: 'cover',
+                        borderTopLeftRadius: '0.375rem',
+                        borderTopRightRadius: '0.375rem',
+                      }}
+                    />
+
+                    <div className="card-body">
+                      <div className="d-flex justify-content-between align-items-start gap-2 mb-2">
+                        <h5 className="fw-bold mb-0">{housing.title}</h5>
+                        <span className={`badge bg-${statusBadgeClass(housing.status)}`}>
+                          {housing.status}
+                        </span>
+                      </div>
+
+                      <p className="text-muted small mb-2">
+                        <i className="bi bi-geo-alt me-1"></i>
+                        {housing.location}
+                      </p>
+
+                      <div className="d-flex flex-wrap gap-2 mb-3 small">
+                        <span className="badge text-bg-light border">${housing.price}</span>
+                        <span className="badge text-bg-light border text-capitalize">
+                          {housing.room_type}
+                        </span>
+                        <span className="badge text-bg-light border text-capitalize">
+                          {housing.gender_allowed}
+                        </span>
+                        <span className="badge text-bg-light border">
+                          {housing.available_rooms} rooms
+                        </span>
+                      </div>
+
+                      <p className="text-muted small mb-3">
+                        {housing.description?.length > 80
+                          ? `${housing.description.slice(0, 80)}...`
+                          : housing.description}
+                      </p>
+
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEditHousing(housing)}
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDeleteHousing(housing.id)}
+                          disabled={deleteLoadingId === housing.id}
+                        >
+                          {deleteLoadingId === housing.id ? 'Deleting...' : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+
+  const renderBookings = () => (
+    <div className="card border-0 shadow-sm">
+      <div className="card-header bg-white fw-bold">Booking Requests</div>
+      <div className="card-body p-0">
+        {!Array.isArray(bookings) || bookings.length === 0 ? (
+          <div className="text-center py-5 text-muted">No booking requests found</div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="table-light">
+                <tr>
+                  <th>Student</th>
+                  <th>Housing</th>
+                  <th>Location</th>
+                  <th>Dates</th>
+                  <th>Status</th>
+                  <th style={{ width: '220px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => {
+                  const studentName = booking?.User?.name || 'Unknown'
+                  const studentEmail = booking?.User?.email || ''
+                  const housingTitle = booking?.Housing?.title || 'N/A'
+                  const housingLocation = booking?.Housing?.location || 'N/A'
+                  const startDate = booking?.start_date || '-'
+                  const endDate = booking?.end_date || '-'
+                  const bookingStatus = booking?.status || 'pending'
+
+                  return (
+                    <tr key={booking?.id}>
+                      <td>
+                        <div className="fw-medium">{studentName}</div>
+                        <small className="text-muted">{studentEmail}</small>
+                      </td>
+
+                      <td>{housingTitle}</td>
+
+                      <td>{housingLocation}</td>
+
+                      <td>
+                        <div>{startDate}</div>
+                        <small className="text-muted">{endDate}</small>
+                      </td>
+
+                      <td>
+                        <span className={`badge bg-${statusBadgeClass(bookingStatus)}`}>
+                          {bookingStatus}
+                        </span>
+                      </td>
+
+                      <td>
+                        {bookingStatus === 'pending' ? (
+                          <div className="d-flex flex-wrap gap-2">
+                            <button
+                              className="btn btn-sm btn-outline-success"
+                              onClick={() =>
+                                handleBookingStatusUpdate(booking.id, 'confirmed')
+                              }
+                              disabled={bookingActionId === booking.id}
+                            >
+                              {bookingActionId === booking.id ? 'Processing...' : 'Confirm'}
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() =>
+                                handleBookingStatusUpdate(booking.id, 'rejected')
+                              }
+                              disabled={bookingActionId === booking.id}
+                            >
+                              {bookingActionId === booking.id ? 'Processing...' : 'Reject'}
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-muted small">No action needed</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="d-flex" style={{ minHeight: '100vh', background: '#f8f9fb' }}>
+      <aside
+        className="text-white p-3 d-flex flex-column"
+        style={{
+          width: '280px',
+          background: '#1f2430',
+          minHeight: '100vh',
+          position: 'sticky',
+          top: 0,
+        }}
+      >
+        <div className="mb-4">
+          <h3 className="fw-bold mb-0 text-primary">
+            <i className="bi bi-house-heart-fill me-2"></i>Dormify
+          </h3>
+          <div className="text-white-50">Owner Dashboard</div>
+        </div>
+
+        <div className="bg-secondary bg-opacity-25 rounded-4 p-3 mb-4 d-flex align-items-center gap-3">
+          <div
+            className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+            style={{ width: '44px', height: '44px', background: '#0d6efd' }}
+          >
+            {profile?.name?.[0] || user?.name?.[0] || 'O'}
+          </div>
+          <div>
+            <div className="fw-bold">{profile?.name || user?.name || 'Owner User'}</div>
+            <span className="badge bg-primary">Owner</span>
+          </div>
+        </div>
+
+        <div className="nav flex-column gap-2">
+          <button
+            className={`btn text-start ${activeSection === 'overview' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('overview')}
+          >
+            <i className="bi bi-speedometer2 me-2"></i>Overview
+          </button>
+
+          <button
+            className={`btn text-start ${activeSection === 'profile' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('profile')}
+          >
+            <i className="bi bi-person me-2"></i>My Profile
+          </button>
+
+          <button
+            className={`btn text-start ${activeSection === 'housings' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('housings')}
+          >
+            <i className="bi bi-house-door me-2"></i>My Housings
+          </button>
+
+          <button
+            className={`btn text-start ${activeSection === 'bookings' ? 'btn-primary' : 'btn-dark border-0 text-white-50'}`}
+            onClick={() => setActiveSection('bookings')}
+          >
+            <i className="bi bi-calendar-check me-2"></i>Booking Requests
+          </button>
+        </div>
+
+        <div className="mt-auto">
+          <button className="btn btn-outline-light w-100" onClick={handleLogout}>
+            <i className="bi bi-box-arrow-right me-2"></i>Logout
+          </button>
+        </div>
+      </aside>
+
+      <main className="flex-grow-1 p-4">
+        <div className="d-flex justify-content-end mb-3">
+          <Link to="/" className="btn btn-outline-primary">
+            <i className="bi bi-house-door ms-2"></i>
+            HOMEPAGE
+          </Link>
+        </div>
+        {loading ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status"></div>
+            <p className="text-muted mt-3">Loading owner dashboard...</p>
+          </div>
+        ) : (
+          <>
+            {error && <div className="alert alert-danger">{error}</div>}
+            {success && <div className="alert alert-success">{success}</div>}
+
+            {activeSection === 'overview' && renderOverview()}
+            {activeSection === 'profile' && renderProfile()}
+            {activeSection === 'housings' && renderHousings()}
+            {activeSection === 'bookings' && renderBookings()}
+          </>
+        )}
+      </main>
     </div>
   )
 }
