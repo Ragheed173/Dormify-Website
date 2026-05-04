@@ -10,45 +10,49 @@ function RegisterPage() {
     name: '',
     email: '',
     password: '',
-    confirm: '',
     phone: '',
     role: 'student',
   })
 
-  const [errors, setErrors] = useState({})
-  const [submitError, setSubmitError] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const isValidEmail = (email) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  }
+
+  const isStrongPassword = (password) => {
+    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(password)
+  }
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const validate = () => {
-    const e = {}
-
-    if (!form.name.trim()) e.name = 'Name is required'
-    if (!form.email.trim()) e.email = 'Email is required'
-    if (!form.phone.trim()) e.phone = 'Phone is required'
-    if (!form.password || form.password.length < 6) {
-      e.password = 'Password must be at least 6 characters'
-    }
-    if (form.password !== form.confirm) {
-      e.confirm = 'Passwords do not match'
-    }
-
-    return e
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    const errs = validate()
-    setErrors(errs)
-    setSubmitError('')
-
-    if (Object.keys(errs).length) return
-
+    setError('')
     setLoading(true)
+
+    if (!form.name || !form.email || !form.password) {
+      setError('Name, email, and password are required')
+      setLoading(false)
+      return
+    }
+
+    if (!isValidEmail(form.email)) {
+      setError('Please enter a valid email address')
+      setLoading(false)
+      return
+    }
+
+    if (!isStrongPassword(form.password)) {
+      setError(
+        'Password must be at least 8 characters and include at least one letter and one number'
+      )
+      setLoading(false)
+      return
+    }
 
     const result = await register(
       form.name,
@@ -60,19 +64,20 @@ function RegisterPage() {
 
     if (result.success) {
       if (result.role === 'admin') navigate('/admin/dashboard')
+      else if (result.role === 'owner') navigate('/owner/dashboard')
       else navigate('/student/dashboard')
     } else {
-      setSubmitError(result.message)
+      setError(result.message)
     }
 
     setLoading(false)
   }
 
   return (
-    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-5">
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light py-4">
       <div
         className="card border-0 shadow-lg p-4 p-md-5"
-        style={{ maxWidth: '480px', width: '100%', borderRadius: '16px' }}
+        style={{ maxWidth: '520px', width: '100%', borderRadius: '16px' }}
       >
         <div className="text-center mb-4">
           <Link to="/" className="text-decoration-none">
@@ -80,13 +85,13 @@ function RegisterPage() {
               <i className="bi bi-house-heart-fill me-2"></i>Dormify
             </h3>
           </Link>
-          <p className="text-muted">Create your account</p>
+          <p className="text-muted">Create a new account</p>
         </div>
 
-        {submitError && (
+        {error && (
           <div className="alert alert-danger d-flex align-items-center gap-2" role="alert">
             <i className="bi bi-exclamation-circle-fill"></i>
-            <span>{submitError}</span>
+            <span>{error}</span>
           </div>
         )}
 
@@ -95,87 +100,90 @@ function RegisterPage() {
             <label className="form-label fw-medium">Full Name</label>
             <input
               type="text"
+              className="form-control"
               name="name"
-              className={`form-control ${errors.name ? 'is-invalid' : ''}`}
               value={form.name}
               onChange={handleChange}
-              placeholder="Ahmad Mohammad"
+              placeholder="Enter your full name"
+              required
             />
-            {errors.name && <div className="invalid-feedback">{errors.name}</div>}
           </div>
 
           <div className="mb-3">
             <label className="form-label fw-medium">Email Address</label>
             <input
               type="email"
+              className="form-control"
               name="email"
-              className={`form-control ${errors.email ? 'is-invalid' : ''}`}
               value={form.email}
               onChange={handleChange}
-              placeholder="your@email.com"
+              placeholder="example@email.com"
+              required
             />
-            {errors.email && <div className="invalid-feedback">{errors.email}</div>}
           </div>
 
           <div className="mb-3">
-            <label className="form-label fw-medium">Phone</label>
+            <label className="form-label fw-medium">Phone Number</label>
             <input
               type="text"
+              className="form-control"
               name="phone"
-              className={`form-control ${errors.phone ? 'is-invalid' : ''}`}
               value={form.phone}
               onChange={handleChange}
-              placeholder="0599999999"
+              placeholder="059xxxxxxx"
             />
-            {errors.phone && <div className="invalid-feedback">{errors.phone}</div>}
           </div>
 
           <div className="mb-3">
+            <label className="form-label fw-medium">Account Type</label>
+            <select
+              className="form-select"
+              name="role"
+              value={form.role}
+              onChange={handleChange}
+            >
+              <option value="student">Student</option>
+              <option value="owner">Owner</option>
+            </select>
+          </div>
+
+          <div className="mb-2">
             <label className="form-label fw-medium">Password</label>
             <input
               type="password"
+              className="form-control"
               name="password"
-              className={`form-control ${errors.password ? 'is-invalid' : ''}`}
               value={form.password}
               onChange={handleChange}
-              placeholder="Minimum 6 characters"
+              placeholder="Enter your password"
+              required
             />
-            {errors.password && <div className="invalid-feedback">{errors.password}</div>}
           </div>
 
-          <div className="mb-3">
-            <label className="form-label fw-medium">Confirm Password</label>
-            <input
-              type="password"
-              name="confirm"
-              className={`form-control ${errors.confirm ? 'is-invalid' : ''}`}
-              value={form.confirm}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-            />
-            {errors.confirm && <div className="invalid-feedback">{errors.confirm}</div>}
+          <div className="small text-muted mb-4">
+            Password must be at least 8 characters and include at least one letter and one number.
           </div>
-
-          <input type="hidden" name="role" value="student" />
 
           <button
             type="submit"
             className="btn btn-primary w-100 py-2 fw-bold"
             disabled={loading}
           >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2"></span>
-                Creating account...
-              </>
-            ) : (
-              <>
-                <i className="bi bi-person-plus-fill me-2"></i>
-                Create Account
-              </>
-            )}
+            {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
+
+        <div className="text-center my-3">
+          <span className="text-muted">or</span>
+        </div>
+
+        <a
+          href="http://localhost:5000/api/auth/google"
+          className="btn btn-outline-danger w-100 py-2 fw-bold"
+        >
+          <i className="bi bi-google me-2"></i>
+          Register with Google
+        </a>
 
         <p className="text-center text-muted mt-3 mb-0 small">
           Already have an account?{' '}

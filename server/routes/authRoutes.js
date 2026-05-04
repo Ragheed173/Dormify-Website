@@ -1,21 +1,21 @@
-const express = require("express")
-const passport = require("passport")
-const jwt = require("jsonwebtoken")
+const express = require('express')
+const passport = require('passport')
+const jwt = require('jsonwebtoken')
 const router = express.Router()
 
-const authController = require("../controllers/authController")
+const authController = require('../controllers/authController')
 
-router.post("/register", authController.register)
-router.post("/login", authController.login)
+router.post('/register', authController.register)
+router.post('/login', authController.login)
 
 router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  '/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
 )
 
 router.get(
-  "/google/callback",
-  passport.authenticate("google", {
+  '/google/callback',
+  passport.authenticate('google', {
     failureRedirect: `${process.env.FRONTEND_URL}/login`,
   }),
   (req, res) => {
@@ -27,7 +27,7 @@ router.get(
         role: req.user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     )
 
     res.redirect(`${process.env.FRONTEND_URL}/auth-success?token=${token}`)
