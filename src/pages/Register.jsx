@@ -18,11 +18,11 @@ function RegisterPage() {
   const [loading, setLoading] = useState(false)
 
   const isValidEmail = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    return /^[A-Za-z0-9._%+-]+@(gmail\.com|stu\.najah\.edu)$/.test(email)
   }
 
   const isStrongPassword = (password) => {
-    return /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(password)
+    return /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]).{8,}$/.test(password)
   }
 
   const handleChange = (e) => {
@@ -34,21 +34,15 @@ function RegisterPage() {
     setError('')
     setLoading(true)
 
-    if (!form.name || !form.email || !form.password) {
-      setError('Name, email, and password are required')
-      setLoading(false)
-      return
-    }
-
     if (!isValidEmail(form.email)) {
-      setError('Please enter a valid email address')
+      setError('Email must end with @gmail.com or @stu.najah.edu')
       setLoading(false)
       return
     }
 
     if (!isStrongPassword(form.password)) {
       setError(
-        'Password must be at least 8 characters and include at least one letter and one number'
+        'Password must be at least 8 characters long and include at least one uppercase letter and one special character'
       )
       setLoading(false)
       return

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
 
 function AuthSuccess() {
   const [searchParams] = useSearchParams()
@@ -16,7 +17,7 @@ function AuthSuccess() {
     localStorage.setItem('token', token)
 
     try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
+      const payload = jwtDecode(token)
 
       const user = {
         id: payload.id,
