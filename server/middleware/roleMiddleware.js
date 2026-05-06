@@ -1,24 +1,19 @@
+const AppError = require("../utils/AppError");
+
 const roleMiddleware = (...allowedRoles) => {
   return (req, res, next) => {
     try {
       if (!req.user) {
-        return res.status(401).json({
-          message: "Unauthorized",
-        });
+        return next(new AppError("Authentication is required", 401, "UNAUTHORIZED"));
       }
 
       if (!allowedRoles.includes(req.user.role)) {
-        return res.status(403).json({
-          message: "Forbidden: access denied",
-        });
+        return next(new AppError("Forbidden: access denied", 403, "FORBIDDEN"));
       }
 
-      next();
+      return next();
     } catch (error) {
-      return res.status(500).json({
-        message: "Server error in role middleware",
-        error: error.message,
-      });
+      return next(error);
     }
   };
 };

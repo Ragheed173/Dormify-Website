@@ -14,6 +14,7 @@ const adminRoutes = require("./routes/adminRoutes")
 const ownerRoutes = require("./routes/ownerRoutes")
 
 const errorMiddleware = require("./middleware/errorMiddleware")
+const AppError = require("./utils/AppError")
 
 const app = express()
 
@@ -24,7 +25,7 @@ app.use(
   })
 )
 
-app.use(express.json())
+app.use(express.json({ limit: "1mb" }))
 
 app.use(
   session({
@@ -54,6 +55,10 @@ app.use("/api/bookings", bookingRoutes)
 app.use("/api/student", studentRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/owner", ownerRoutes)
+
+app.use((req, res, next) => {
+  next(new AppError(`Route ${req.originalUrl} not found`, 404, "ROUTE_NOT_FOUND"))
+})
 
 app.use(errorMiddleware)
 
