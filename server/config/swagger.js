@@ -47,7 +47,37 @@ const swaggerOptions = {
           type: "object",
           properties: {
             message: { type: "string" },
-            error: { type: "string" },
+            code: { type: "string" },
+            details: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string" },
+                  message: { type: "string" },
+                },
+              },
+            },
+          },
+        },
+        ValidationErrorResponse: {
+          type: "object",
+          properties: {
+            message: { type: "string", example: "Validation failed" },
+            code: { type: "string", example: "VALIDATION_ERROR" },
+            details: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string", example: "email" },
+                  message: {
+                    type: "string",
+                    example: "email must be a valid email address",
+                  },
+                },
+              },
+            },
           },
         },
         User: {
@@ -173,7 +203,7 @@ const swaggerOptions = {
             phone: { type: "string", example: "0599123456" },
             role: {
               type: "string",
-              enum: ["student", "admin", "owner"],
+              enum: ["student", "owner"],
               default: "student",
             },
           },
@@ -212,13 +242,14 @@ const swaggerOptions = {
           type: "object",
           required: ["title", "location", "price", "room_type"],
           properties: {
-            title: { type: "string", example: "Modern student studio" },
+            title: { type: "string", minLength: 3, maxLength: 150, example: "Modern student studio" },
             description: {
               type: "string",
+              maxLength: 2000,
               example: "Close to campus with shared kitchen.",
             },
-            location: { type: "string", example: "Nablus" },
-            price: { type: "number", format: "float", example: 450 },
+            location: { type: "string", minLength: 2, maxLength: 120, example: "Nablus" },
+            price: { type: "number", format: "float", minimum: 0, example: 450 },
             gender_allowed: {
               type: "string",
               enum: ["male", "female", "both"],
@@ -229,7 +260,12 @@ const swaggerOptions = {
               enum: ["single", "double", "triple"],
               example: "single",
             },
-            available_rooms: { type: "integer", example: 3 },
+            available_rooms: {
+              type: "integer",
+              minimum: 0,
+              example: 3,
+              description: "Must be at least 1 when status is available.",
+            },
             status: {
               type: "string",
               enum: ["available", "unavailable"],
@@ -241,6 +277,23 @@ const swaggerOptions = {
               example: ["https://example.com/housing.jpg"],
             },
           },
+        },
+        AdminHousingRequest: {
+          allOf: [
+            { $ref: "#/components/schemas/HousingRequest" },
+            {
+              type: "object",
+              required: ["owner_id"],
+              properties: {
+                owner_id: {
+                  type: "integer",
+                  minimum: 1,
+                  example: 2,
+                  description: "Existing user ID with role owner.",
+                },
+              },
+            },
+          ],
         },
         BookingRequest: {
           type: "object",

@@ -212,7 +212,7 @@
  *
  * /api/bookings:
  *   post:
- *     summary: Create a booking
+ *     summary: Create a booking as a student
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -274,7 +274,7 @@
  *       500:
  *         description: Failed to fetch booking
  *   delete:
- *     summary: Delete a booking
+ *     summary: Delete a booking as admin
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -296,7 +296,7 @@
  *
  * /api/bookings/{id}/status:
  *   patch:
- *     summary: Update a booking status
+ *     summary: Update a booking status as admin
  *     tags: [Bookings]
  *     security:
  *       - bearerAuth: []
@@ -750,7 +750,7 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: "#/components/schemas/HousingRequest"
+ *             $ref: "#/components/schemas/AdminHousingRequest"
  *     responses:
  *       201:
  *         description: Housing created successfully
