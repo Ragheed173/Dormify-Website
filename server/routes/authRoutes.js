@@ -4,9 +4,12 @@ const jwt = require('jsonwebtoken')
 const router = express.Router()
 
 const authController = require('../controllers/authController')
+const asyncHandler = require('../utils/asyncHandler')
+const validateRequest = require('../middleware/validateRequest')
+const schemas = require('../validators/schemas')
 
-router.post('/register', authController.register)
-router.post('/login', authController.login)
+router.post('/register', validateRequest(schemas.register), asyncHandler(authController.register))
+router.post('/login', validateRequest(schemas.login), asyncHandler(authController.login))
 
 router.get(
   '/google',
@@ -16,7 +19,7 @@ router.get(
 router.get(
   '/google/callback',
   passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL}/login`,
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`,
   }),
   (req, res) => {
     const token = jwt.sign(
@@ -30,7 +33,7 @@ router.get(
       { expiresIn: '7d' }
     )
 
-    res.redirect(`${process.env.FRONTEND_URL}/auth-success?token=${token}`)
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth-success?token=${token}`)
   }
 )
 

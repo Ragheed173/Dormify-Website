@@ -1,4 +1,6 @@
 const passport = require("passport")
+const bcrypt = require("bcryptjs")
+const crypto = require("crypto")
 const GoogleStrategy = require("passport-google-oauth20").Strategy
 const { User } = require("../models")
 
@@ -22,10 +24,12 @@ passport.use(
         let user = await User.findOne({ where: { email } })
 
         if (!user) {
+          const randomPassword = crypto.randomBytes(32).toString("hex")
+
           user = await User.create({
             name,
             email,
-            password: "google_oauth_user",
+            password: await bcrypt.hash(randomPassword, 10),
             phone: null,
             role: "student",
             google_id: googleId,
