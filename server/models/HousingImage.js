@@ -5,6 +5,9 @@ const HousingImage = sequelize.define("HousingImage", {
   image_url: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: {
+      notEmpty: true,
+    },
   },
 }, {
   tableName: "housing_images",
