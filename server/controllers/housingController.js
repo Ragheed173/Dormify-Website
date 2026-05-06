@@ -1,7 +1,8 @@
 const { Op } = require("sequelize");
 const { Housing, HousingImage } = require("../models");
+const AppError = require("../utils/AppError");
 
-const getAllHousings = async (req, res) => {
+const getAllHousings = async (req, res, next) => {
   try {
     const {
       search,
@@ -77,14 +78,11 @@ const getAllHousings = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch housings",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getHousingById = async (req, res) => {
+const getHousingById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -97,9 +95,7 @@ const getHousingById = async (req, res) => {
     });
 
     if (!housing) {
-      return res.status(404).json({
-        message: "Housing not found",
-      });
+      throw new AppError("Housing not found", 404, "HOUSING_NOT_FOUND");
     }
 
     return res.status(200).json({
@@ -107,10 +103,7 @@ const getHousingById = async (req, res) => {
       data: housing,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch housing",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 

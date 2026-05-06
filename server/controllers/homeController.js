@@ -1,6 +1,6 @@
 const { User, Housing, HousingImage, Booking } = require("../models");
 
-const getStats = async (req, res) => {
+const getStats = async (req, res, next) => {
   try {
     const [usersCount, housingsCount, bookingsCount] = await Promise.all([
       User.count(),
@@ -17,14 +17,11 @@ const getStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch stats",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getFeaturedHousings = async (req, res) => {
+const getFeaturedHousings = async (req, res, next) => {
   try {
     const featuredHousings = await Housing.findAll({
       where: {
@@ -45,10 +42,7 @@ const getFeaturedHousings = async (req, res) => {
       data: featuredHousings,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch featured housings",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
