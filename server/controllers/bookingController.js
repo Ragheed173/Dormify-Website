@@ -1,28 +1,49 @@
-const { Booking, Housing, User, HousingImage, sequelize } = require('../models')
+const { Op } = require("sequelize");
+const { Booking, Housing, User, HousingImage } = require("../models");
+const AppError = require("../utils/AppError");
+const {
+  updateBookingStatusWithInventory,
+  deleteBookingWithInventory,
+} = require("../services/bookingService");
 
-const createBooking = async (req, res) => {
+/**
+ * Student use case: create a pending booking request for an available housing.
+ */
+const createBooking = async (req, res, next) => {
   try {
     const { housing_id, start_date, end_date, notes } = req.body;
     const user_id = req.user.id;
 
-    if (!housing_id || !start_date || !end_date) {
-      return res.status(400).json({
-        message: "housing_id, start_date, and end_date are required",
-      });
-    }
-
     const housing = await Housing.findByPk(housing_id);
 
     if (!housing) {
-      return res.status(404).json({
-        message: "Housing not found",
-      });
+      throw new AppError("Housing not found", 404, "HOUSING_NOT_FOUND");
     }
 
     if (housing.status !== "available" || housing.available_rooms <= 0) {
-      return res.status(400).json({
-        message: "This housing is not available for booking",
-      });
+      throw new AppError(
+        "This housing is not available for booking",
+        400,
+        "HOUSING_UNAVAILABLE"
+      );
+    }
+
+    const activeBooking = await Booking.findOne({
+      where: {
+        user_id,
+        housing_id,
+        status: {
+          [Op.in]: ["pending", "confirmed"],
+        },
+      },
+    });
+
+    if (activeBooking) {
+      throw new AppError(
+        "You already have an active booking for this housing",
+        409,
+        "BOOKING_ALREADY_EXISTS"
+      );
     }
 
     const booking = await Booking.create({
@@ -52,134 +73,60 @@ const createBooking = async (req, res) => {
       data: createdBooking,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to create booking",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getBookingById = async (req, res) => {
+const canAccessBooking = (user, booking) => {
+  if (user.role === "admin") return true;
+  if (booking.user_id === user.id) return true;
+  return booking.Housing?.owner_id === user.id;
+};
+
+/**
+ * Fetches one booking only when the current user owns the matching use case.
+ */
+const getBookingById = async (req, res, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
     const booking = await Booking.findByPk(id, {
       include: [
         {
           model: Housing,
         },
-        {
-          model: User,
-          attributes: { exclude: ['password'] },
-        },
-      ],
-    })
-
-    if (!booking) {
-      return res.status(404).json({
-        message: 'Booking not found',
-      })
-    }
-
-    return res.status(200).json({
-      message: 'Booking fetched successfully',
-      data: booking,
-    })
-  } catch (error) {
-    return res.status(500).json({
-      message: 'Failed to fetch booking',
-      error: error.message,
-    })
-  }
-};
-
-const updateBookingStatus = async (req, res) => {
-  let transaction;
-
-  try {
-    const { id } = req.params;
-    const { status } = req.body;
-
-    const allowedStatuses = ["pending", "confirmed", "cancelled", "rejected"];
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message: "Invalid booking status",
-      });
-    }
-
-    transaction = await sequelize.transaction();
-
-    const booking = await Booking.findByPk(id, {
-      include: [{ model: Housing }],
-      transaction,
-      lock: transaction.LOCK.UPDATE,
-    });
-
-    if (!booking) {
-      await transaction.rollback();
-      return res.status(404).json({
-        message: "Booking not found",
-      });
-    }
-
-    const oldStatus = booking.status;
-    const housing = booking.Housing;
-
-    if (!housing) {
-      await transaction.rollback();
-      return res.status(404).json({
-        message: "Related housing not found",
-      });
-    }
-
-    if (oldStatus !== "confirmed" && status === "confirmed") {
-      if (housing.status !== "available" || housing.available_rooms <= 0) {
-        await transaction.rollback();
-        return res.status(400).json({
-          message: "This housing is no longer available",
-        });
-      }
-
-      housing.available_rooms -= 1;
-
-      if (housing.available_rooms <= 0) {
-        housing.available_rooms = 0;
-        housing.status = "unavailable";
-      }
-
-      await housing.save({ transaction });
-    }
-
-    if (
-      oldStatus === "confirmed" &&
-      ["cancelled", "rejected", "pending"].includes(status)
-    ) {
-      housing.available_rooms += 1;
-
-      if (housing.available_rooms > 0) {
-        housing.status = "available";
-      }
-
-      await housing.save({ transaction });
-    }
-
-    booking.status = status;
-    await booking.save({ transaction });
-
-    await transaction.commit();
-
-    const updatedBooking = await Booking.findByPk(id, {
-      include: [
         {
           model: User,
           attributes: { exclude: ["password"] },
         },
-        {
-          model: Housing,
-          include: [{ model: HousingImage }],
-        },
       ],
+    });
+
+    if (!booking) {
+      throw new AppError("Booking not found", 404, "BOOKING_NOT_FOUND");
+    }
+
+    if (!canAccessBooking(req.user, booking)) {
+      throw new AppError("Forbidden: access denied", 403, "FORBIDDEN");
+    }
+
+    return res.status(200).json({
+      message: "Booking fetched successfully",
+      data: booking,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+const updateBookingStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const updatedBooking = await updateBookingStatusWithInventory({
+      bookingId: id,
+      status,
     });
 
     return res.status(200).json({
@@ -187,39 +134,21 @@ const updateBookingStatus = async (req, res) => {
       data: updatedBooking,
     });
   } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
-
-    return res.status(500).json({
-      message: "Failed to update booking status",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const deleteBooking = async (req, res) => {
+const deleteBooking = async (req, res, next) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
-    const booking = await Booking.findByPk(id)
-
-    if (!booking) {
-      return res.status(404).json({
-        message: 'Booking not found',
-      })
-    }
-
-    await booking.destroy()
+    await deleteBookingWithInventory(id);
 
     return res.status(200).json({
-      message: 'Booking deleted successfully',
-    })
+      message: "Booking deleted successfully",
+    });
   } catch (error) {
-    return res.status(500).json({
-      message: 'Failed to delete booking',
-      error: error.message,
-    })
+    return next(error);
   }
 };
 
@@ -228,4 +157,4 @@ module.exports = {
   getBookingById,
   updateBookingStatus,
   deleteBooking,
-}
+};

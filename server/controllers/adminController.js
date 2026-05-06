@@ -1,6 +1,8 @@
-const { User, Housing, HousingImage, Booking, sequelize } = require("../models");
+const { User, Housing, HousingImage, Booking } = require("../models");
+const AppError = require("../utils/AppError");
+const { updateBookingStatusWithInventory } = require("../services/bookingService");
 
-const getDashboardStats = async (req, res) => {
+const getDashboardStats = async (req, res, next) => {
   try {
     const [
       usersCount,
@@ -27,14 +29,11 @@ const getDashboardStats = async (req, res) => {
       },
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch dashboard stats",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getAllUsers = async (req, res) => {
+const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.findAll({
       attributes: { exclude: ["password"] },
@@ -46,14 +45,11 @@ const getAllUsers = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch users",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getUserById = async (req, res) => {
+const getUserById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -62,9 +58,7 @@ const getUserById = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
     return res.status(200).json({
@@ -72,14 +66,11 @@ const getUserById = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch user",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { name, email, phone, role } = req.body;
@@ -87,9 +78,7 @@ const updateUser = async (req, res) => {
     const user = await User.findByPk(id);
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
     if (email && email !== user.email) {
@@ -98,9 +87,7 @@ const updateUser = async (req, res) => {
       });
 
       if (existingUser) {
-        return res.status(400).json({
-          message: "Email is already in use",
-        });
+        throw new AppError("Email is already in use", 409, "EMAIL_EXISTS");
       }
     }
 
@@ -120,23 +107,26 @@ const updateUser = async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to update user",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params;
+
+    if (Number(id) === req.user.id) {
+      throw new AppError(
+        "Admin cannot delete their own account",
+        400,
+        "SELF_DELETE_NOT_ALLOWED"
+      );
+    }
 
     const user = await User.findByPk(id);
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
     await user.destroy();
@@ -145,14 +135,14 @@ const deleteUser = async (req, res) => {
       message: "User deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to delete user",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const createHousing = async (req, res) => {
+/**
+ * Admin use case: create a listing on behalf of an existing owner account.
+ */
+const createHousing = async (req, res, next) => {
   try {
     const {
       title,
@@ -163,13 +153,18 @@ const createHousing = async (req, res) => {
       room_type,
       available_rooms,
       status,
+      owner_id,
       image_urls,
     } = req.body;
 
-    if (!title || !location || price == null || !room_type) {
-      return res.status(400).json({
-        message: "title, location, price, and room_type are required",
-      });
+    const owner = await User.findByPk(owner_id);
+
+    if (!owner || owner.role !== "owner") {
+      throw new AppError(
+        "owner_id must belong to an owner user",
+        400,
+        "INVALID_OWNER"
+      );
     }
 
     const housing = await Housing.create({
@@ -181,6 +176,7 @@ const createHousing = async (req, res) => {
       room_type,
       available_rooms,
       status,
+      owner_id,
     });
 
     if (Array.isArray(image_urls) && image_urls.length > 0) {
@@ -205,14 +201,11 @@ const createHousing = async (req, res) => {
       data: createdHousing,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to create housing",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const updateHousing = async (req, res) => {
+const updateHousing = async (req, res, next) => {
   try {
     const { id } = req.params;
     const {
@@ -230,9 +223,7 @@ const updateHousing = async (req, res) => {
     const housing = await Housing.findByPk(id);
 
     if (!housing) {
-      return res.status(404).json({
-        message: "Housing not found",
-      });
+      throw new AppError("Housing not found", 404, "HOUSING_NOT_FOUND");
     }
 
     housing.title = title ?? housing.title;
@@ -274,23 +265,18 @@ const updateHousing = async (req, res) => {
       data: updatedHousing,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to update housing",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const deleteHousing = async (req, res) => {
+const deleteHousing = async (req, res, next) => {
   try {
     const { id } = req.params;
 
     const housing = await Housing.findByPk(id);
 
     if (!housing) {
-      return res.status(404).json({
-        message: "Housing not found",
-      });
+      throw new AppError("Housing not found", 404, "HOUSING_NOT_FOUND");
     }
 
     await housing.destroy();
@@ -299,14 +285,11 @@ const deleteHousing = async (req, res) => {
       message: "Housing deleted successfully",
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to delete housing",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getAllBookings = async (req, res) => {
+const getAllBookings = async (req, res, next) => {
   try {
     const bookings = await Booking.findAll({
       include: [
@@ -331,97 +314,18 @@ const getAllBookings = async (req, res) => {
       data: bookings,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch bookings",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const updateBookingStatus = async (req, res) => {
-  let transaction;
-
+const updateBookingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    const allowedStatuses = ["pending", "confirmed", "cancelled", "rejected"];
-
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message: "Invalid booking status",
-      });
-    }
-
-    transaction = await sequelize.transaction();
-
-    const booking = await Booking.findByPk(id, {
-      include: [
-        {
-          model: Housing,
-        },
-      ],
-      transaction,
-      lock: transaction.LOCK.UPDATE,
-    });
-
-    if (!booking) {
-      await transaction.rollback();
-      return res.status(404).json({
-        message: "Booking not found",
-      });
-    }
-
-    const oldStatus = booking.status;
-    const housing = booking.Housing;
-
-    if (!housing) {
-      await transaction.rollback();
-      return res.status(404).json({
-        message: "Related housing not found",
-      });
-    }
-
-    if (oldStatus !== "confirmed" && status === "confirmed") {
-      if (housing.available_rooms <= 0) {
-        await transaction.rollback();
-        return res.status(400).json({
-          message: "No available rooms left for confirmation",
-        });
-      }
-
-      housing.available_rooms -= 1;
-      await housing.save({ transaction });
-    }
-
-    if (
-      oldStatus === "confirmed" &&
-      (status === "cancelled" || status === "rejected" || status === "pending")
-    ) {
-      housing.available_rooms += 1;
-      await housing.save({ transaction });
-    }
-
-    booking.status = status;
-    await booking.save({ transaction });
-
-    await transaction.commit();
-
-    const updatedBooking = await Booking.findByPk(id, {
-      include: [
-        {
-          model: User,
-          attributes: { exclude: ["password"] },
-        },
-        {
-          model: Housing,
-          include: [
-            {
-              model: HousingImage,
-            },
-          ],
-        },
-      ],
+    const updatedBooking = await updateBookingStatusWithInventory({
+      bookingId: id,
+      status,
     });
 
     return res.status(200).json({
@@ -429,14 +333,7 @@ const updateBookingStatus = async (req, res) => {
       data: updatedBooking,
     });
   } catch (error) {
-    if (transaction) {
-      await transaction.rollback();
-    }
-
-    return res.status(500).json({
-      message: "Failed to update booking status",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 

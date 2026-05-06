@@ -1,15 +1,15 @@
 const { User, Booking, Housing, HousingImage } = require("../models");
+const AppError = require("../utils/AppError");
+const { updateBookingStatusWithInventory } = require("../services/bookingService");
 
-const getStudentProfile = async (req, res) => {
+const getStudentProfile = async (req, res, next) => {
   try {
     const user = await User.findByPk(req.user.id, {
       attributes: { exclude: ["password"] },
     });
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
     return res.status(200).json({
@@ -17,23 +17,18 @@ const getStudentProfile = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch profile",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const updateStudentProfile = async (req, res) => {
+const updateStudentProfile = async (req, res, next) => {
   try {
     const { name, email, phone } = req.body;
 
     const user = await User.findByPk(req.user.id);
 
     if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
+      throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
     if (email && email !== user.email) {
@@ -42,9 +37,7 @@ const updateStudentProfile = async (req, res) => {
       });
 
       if (existingUser) {
-        return res.status(400).json({
-          message: "Email is already in use",
-        });
+        throw new AppError("Email is already in use", 409, "EMAIL_EXISTS");
       }
     }
 
@@ -63,14 +56,11 @@ const updateStudentProfile = async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to update profile",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getStudentBookings = async (req, res) => {
+const getStudentBookings = async (req, res, next) => {
   try {
     const bookings = await Booking.findAll({
       where: {
@@ -90,14 +80,11 @@ const getStudentBookings = async (req, res) => {
       data: bookings,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch bookings",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const getStudentBookingById = async (req, res) => {
+const getStudentBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -115,9 +102,11 @@ const getStudentBookingById = async (req, res) => {
     });
 
     if (!booking) {
-      return res.status(404).json({
-        message: "Booking not found or does not belong to this student",
-      });
+      throw new AppError(
+        "Booking not found or does not belong to this student",
+        404,
+        "BOOKING_NOT_FOUND"
+      );
     }
 
     return res.status(200).json({
@@ -125,14 +114,11 @@ const getStudentBookingById = async (req, res) => {
       data: booking,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to fetch booking",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
-const cancelStudentBooking = async (req, res) => {
+const cancelStudentBooking = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -149,32 +135,26 @@ const cancelStudentBooking = async (req, res) => {
     });
 
     if (!booking) {
-      return res.status(404).json({
-        message: "Booking not found or does not belong to this student",
-      });
+      throw new AppError(
+        "Booking not found or does not belong to this student",
+        404,
+        "BOOKING_NOT_FOUND"
+      );
     }
 
     if (booking.status === "cancelled") {
-      return res.status(400).json({
-        message: "Booking is already cancelled",
-      });
+      throw new AppError(
+        "Booking is already cancelled",
+        400,
+        "BOOKING_ALREADY_CANCELLED"
+      );
     }
 
-    if (booking.status === "confirmed" && booking.Housing) {
-      booking.Housing.available_rooms += 1;
-      await booking.Housing.save();
-    }
-
-    booking.status = "cancelled";
-    await booking.save();
-
-    const updatedBooking = await Booking.findByPk(booking.id, {
-      include: [
-        {
-          model: Housing,
-          include: [{ model: HousingImage }],
-        },
-      ],
+    const updatedBooking = await updateBookingStatusWithInventory({
+      bookingId: id,
+      bookingWhere: { user_id: req.user.id },
+      status: "cancelled",
+      notFoundMessage: "Booking not found or does not belong to this student",
     });
 
     return res.status(200).json({
@@ -182,10 +162,7 @@ const cancelStudentBooking = async (req, res) => {
       data: updatedBooking,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: "Failed to cancel booking",
-      error: error.message,
-    });
+    return next(error);
   }
 };
 
