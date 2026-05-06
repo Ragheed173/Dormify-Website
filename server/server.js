@@ -29,7 +29,8 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("Database connected successfully");
 
-    await sequelize.sync({ alter: true });
+    const syncOptions = process.env.DB_SYNC_ALTER === "true" ? { alter: true } : {};
+    await sequelize.sync(syncOptions);
     console.log("Database synced");
 
     const server = app.listen(PORT, () => {
