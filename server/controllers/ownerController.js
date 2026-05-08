@@ -1,5 +1,6 @@
 const { User, Housing, HousingImage, Booking } = require('../models')
 const AppError = require('../utils/AppError')
+const userEventEmitter = require('../events/userEvents')
 const { updateBookingStatusWithInventory } = require('../services/bookingService')
 
 const getOwnerProfile = async (req, res, next) => {
@@ -129,6 +130,8 @@ const createOwnerHousing = async (req, res, next) => {
     const createdHousing = await Housing.findByPk(housing.id, {
       include: [{ model: HousingImage }],
     })
+
+    userEventEmitter.emit('housing:created', createdHousing)
 
     return res.status(201).json({
       message: 'Housing created successfully',

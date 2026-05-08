@@ -24,6 +24,8 @@ const serializeAuthUser = (user) => ({
   role: user.role,
 })
 
+const userEventEmitter = require('../events/userEvents')
+
 const register = async (req, res, next) => {
   try {
     const { name, email, password, phone, role } = req.body
@@ -45,6 +47,8 @@ const register = async (req, res, next) => {
       phone: phone || null,
       role: role || 'student',
     })
+
+    userEventEmitter.emit('user:created', user)
 
     const token = signToken(user)
 

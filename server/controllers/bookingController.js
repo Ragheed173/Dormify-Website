@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { Booking, Housing, User, HousingImage } = require("../models");
 const AppError = require("../utils/AppError");
+const userEventEmitter = require("../events/userEvents");
 const {
   updateBookingStatusWithInventory,
   deleteBookingWithInventory,
@@ -65,6 +66,8 @@ const createBooking = async (req, res, next) => {
       ],
     });
 
+    userEventEmitter.emit("booking:created", createdBooking);
+
     return res.status(201).json({
       message: "Booking created successfully",
       data: createdBooking,
@@ -123,6 +126,11 @@ const updateBookingStatus = async (req, res, next) => {
       status,
     });
 
+    userEventEmitter.emit("booking:status_updated", {
+      booking: updatedBooking,
+      status,
+    });
+
     return res.status(200).json({
       message: "Booking status updated successfully",
       data: updatedBooking,
@@ -137,6 +145,11 @@ const deleteBooking = async (req, res, next) => {
     const { id } = req.params;
 
     await deleteBookingWithInventory(id);
+
+    userEventEmitter.emit("booking:deleted", {
+      bookingId: id,
+      userId: req.user?.id,
+    });
 
     return res.status(200).json({
       message: "Booking deleted successfully",

@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs")
 const crypto = require("crypto")
 const GoogleStrategy = require("passport-google-oauth20").Strategy
 const { User } = require("../models")
+const userEventEmitter = require("../events/userEvents")
 
 passport.use(
   new GoogleStrategy(
@@ -34,6 +35,8 @@ passport.use(
             role: "student",
             google_id: googleId,
           })
+
+          userEventEmitter.emit("user:created", user)
         } else if (!user.google_id) {
           user.google_id = googleId
           await user.save()

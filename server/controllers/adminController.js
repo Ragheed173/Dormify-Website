@@ -1,5 +1,6 @@
 const { User, Housing, HousingImage, Booking } = require("../models");
 const AppError = require("../utils/AppError");
+const userEventEmitter = require("../events/userEvents");
 const { updateBookingStatusWithInventory } = require("../services/bookingService");
 
 const getDashboardStats = async (req, res, next) => {
@@ -192,6 +193,8 @@ const createHousing = async (req, res, next) => {
         },
       ],
     });
+
+    userEventEmitter.emit('housing:created', createdHousing)
 
     return res.status(201).json({
       message: "Housing created successfully",
