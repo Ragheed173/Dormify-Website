@@ -10,6 +10,7 @@ import StudentDashboard from './pages/StudentDashboard'
 import OwnerDashboard from './pages/OwnerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AuthSuccess from './pages/AuthSuccess'
+import AiExplainPage from './pages/AiExplainPage'
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth-success" element={<AuthSuccess />} />
+        <Route path="/ai-explain" element={<AiExplainPage />} />
 
         <Route
           path="/booking/confirm/:id"

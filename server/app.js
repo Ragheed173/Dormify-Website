@@ -12,6 +12,7 @@ const bookingRoutes = require("./routes/bookingRoutes")
 const studentRoutes = require("./routes/studentRoutes")
 const adminRoutes = require("./routes/adminRoutes")
 const ownerRoutes = require("./routes/ownerRoutes")
+const aiRoutes = require("./routes/aiRoutes")
 
 const errorMiddleware = require("./middleware/errorMiddleware")
 const AppError = require("./utils/AppError")
@@ -67,6 +68,7 @@ app.use("/api/bookings", bookingRoutes)
 app.use("/api/student", studentRoutes)
 app.use("/api/admin", adminRoutes)
 app.use("/api/owner", ownerRoutes)
+app.use("/api/ai", aiRoutes)
 
 app.use((req, res, next) => {
   next(new AppError(`Route ${req.originalUrl} not found`, 404, "ROUTE_NOT_FOUND"))

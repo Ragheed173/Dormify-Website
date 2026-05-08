@@ -179,6 +179,17 @@ const ownerBookingStatus = {
   },
 };
 
+const aiExplain = {
+  body: {
+    topic: {
+      type: "string",
+      required: true,
+      minLength: 2,
+      maxLength: 500,
+    },
+  },
+};
+
 module.exports = {
   idParam,
   register,
@@ -191,4 +202,5 @@ module.exports = {
   bookingCreate,
   bookingStatus,
   ownerBookingStatus,
+  aiExplain,
 };

@@ -176,6 +176,13 @@ export const validateHousingFilters = ({ search, minPrice, maxPrice }) => {
   )
 }
 
+export const validateAiExplainForm = ({ topic }) =>
+  firstError(
+    isBlank(topic) ? 'Topic is required' : '',
+    !isBlank(topic) && String(topic).trim().length < 2 ? 'Topic must be at least 2 characters' : '',
+    !isBlank(topic) && String(topic).trim().length > 500 ? 'Topic must be at most 500 characters' : ''
+  )
+
 export const validateHousingForm = (form, { includeImages = false } = {}) => {
   const price = Number(form.price)
   const availableRooms = Number(form.available_rooms)

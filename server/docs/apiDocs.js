@@ -121,6 +121,44 @@
  *       500:
  *         description: Failed to fetch featured housings
  *
+ * /api/ai:
+ *   get:
+ *     summary: Get AI explain endpoint settings
+ *     tags: [AI]
+ *     responses:
+ *       200:
+ *         description: AI service settings fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/AiInfoResponse"
+ *
+ * /api/ai/explain:
+ *   post:
+ *     summary: Explain a topic using Gemini, Groq, or mock AI
+ *     tags: [AI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/AiExplainRequest"
+ *     responses:
+ *       200:
+ *         description: Explanation generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/AiExplainResponse"
+ *       400:
+ *         description: Topic validation failed
+ *       403:
+ *         description: Provider access denied
+ *       429:
+ *         description: Provider rate limit reached
+ *       502:
+ *         description: LLM request failed
+ *
  * /api/housings:
  *   get:
  *     summary: Get public housing listings

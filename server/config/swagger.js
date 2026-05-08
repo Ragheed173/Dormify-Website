@@ -27,6 +27,7 @@ const swaggerOptions = {
       { name: "Student", description: "Student account endpoints" },
       { name: "Owner", description: "Owner dashboard endpoints" },
       { name: "Admin", description: "Admin dashboard endpoints" },
+      { name: "AI", description: "AI explanation endpoints" },
     ],
     components: {
       securitySchemes: {
@@ -327,6 +328,52 @@ const swaggerOptions = {
               type: "string",
               enum: ["confirmed", "rejected", "cancelled"],
               example: "confirmed",
+            },
+          },
+        },
+        AiInfoResponse: {
+          type: "object",
+          properties: {
+            message: { type: "string", example: "AI explain service is ready" },
+            data: {
+              type: "object",
+              properties: {
+                provider: { type: "string", enum: ["gemini", "groq", "mock"], example: "groq" },
+                geminiModel: { type: "string", example: "gemini-2.5-flash" },
+                groqModel: { type: "string", example: "llama-3.1-8b-instant" },
+                mockEnabled: { type: "boolean", example: false },
+                endpoint: { type: "string", example: "/api/ai/explain" },
+              },
+            },
+          },
+        },
+        AiExplainRequest: {
+          type: "object",
+          required: ["topic"],
+          properties: {
+            topic: {
+              type: "string",
+              minLength: 2,
+              maxLength: 500,
+              example: "what an HTTP request is",
+            },
+          },
+        },
+        AiExplainResponse: {
+          type: "object",
+          properties: {
+            message: { type: "string", example: "Explanation generated successfully" },
+            data: {
+              type: "object",
+              properties: {
+                topic: { type: "string", example: "what an HTTP request is" },
+                explanation: {
+                  type: "string",
+                  example: "An HTTP request is a message your browser sends to a server to ask for data.",
+                },
+                source: { type: "string", enum: ["gemini", "groq", "mock"], example: "groq" },
+                model: { type: "string", example: "llama-3.1-8b-instant" },
+              },
             },
           },
         },

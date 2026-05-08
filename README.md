@@ -9,6 +9,7 @@ Dormify is a student housing platform with a React frontend and an Express/MySQL
 - Validation: reusable request validation for params, query strings, and request bodies.
 - Error handling: centralized error middleware returns consistent `message`, `code`, and validation `details`.
 - Documentation: OpenAPI/Swagger is available at `http://localhost:5000/api-docs`.
+- AI explain endpoint: `POST /api/ai/explain` can use Gemini, Groq, or mock mode for class demos.
 - Code structure: routes call controllers, controllers focus on use cases, and shared booking status logic lives in `server/services/bookingService.js`.
 - Database sync: `DB_SYNC_ALTER=true` can be used during development when schema changes need to be applied automatically.
 
@@ -32,13 +33,26 @@ Dormify is a student housing platform with a React frontend and an Express/MySQL
 ## Run Locally
 
 1. Copy `.env.example` to `.env`.
-2. Start MySQL/XAMPP and create the configured database.
-3. Install dependencies with `npm install`.
-4. Start the backend with `npm run backend`.
-5. Start the frontend in another terminal with `npm run frontend`.
+2. Install dependencies with `npm install`.
+3. Start the backend with `npm run backend`.
+4. Start the frontend in another terminal with `npm run frontend`.
 
 Backend URL: `http://localhost:5000`
 
 Frontend URL: `http://localhost:5173`
 
 Swagger URL: `http://localhost:5000/api-docs`
+
+## AI Explain Endpoint
+
+Use `POST /api/ai/explain` with JSON:
+
+```json
+{ "topic": "what an HTTP request is" }
+```
+
+Set one provider in `.env`:
+
+- Gemini: `AI_PROVIDER=gemini`, `GEMINI_API_KEY=...`
+- Groq: `AI_PROVIDER=groq`, `GROQ_API_KEY=...`
+- Demo without an API key: `USE_MOCK_AI=1`
