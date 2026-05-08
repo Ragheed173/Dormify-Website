@@ -17,10 +17,6 @@ const syncHousingAvailability = async (housing, transaction) => {
   await housing.save({ transaction });
 };
 
-/**
- * Applies booking status changes and room inventory updates in one transaction.
- * This keeps admin, owner, and general booking flows consistent.
- */
 const updateBookingStatusWithInventory = async ({
   bookingId,
   status,

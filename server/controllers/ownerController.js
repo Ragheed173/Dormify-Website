@@ -83,9 +83,6 @@ const getOwnerHousings = async (req, res, next) => {
   }
 }
 
-/**
- * Owner use case: create a listing that is automatically tied to the logged-in owner.
- */
 const createOwnerHousing = async (req, res, next) => {
   try {
     const {

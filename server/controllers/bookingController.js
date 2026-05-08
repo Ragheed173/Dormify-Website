@@ -6,9 +6,6 @@ const {
   deleteBookingWithInventory,
 } = require("../services/bookingService");
 
-/**
- * Student use case: create a pending booking request for an available housing.
- */
 const createBooking = async (req, res, next) => {
   try {
     const { housing_id, start_date, end_date, notes } = req.body;
@@ -83,9 +80,6 @@ const canAccessBooking = (user, booking) => {
   return booking.Housing?.owner_id === user.id;
 };
 
-/**
- * Fetches one booking only when the current user owns the matching use case.
- */
 const getBookingById = async (req, res, next) => {
   try {
     const { id } = req.params;

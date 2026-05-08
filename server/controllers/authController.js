@@ -24,9 +24,6 @@ const serializeAuthUser = (user) => ({
   role: user.role,
 })
 
-/**
- * Registers a student or owner, hashes the password, and returns a JWT for the new session.
- */
 const register = async (req, res, next) => {
   try {
     const { name, email, password, phone, role } = req.body
@@ -61,9 +58,6 @@ const register = async (req, res, next) => {
   }
 }
 
-/**
- * Authenticates a local email/password login and returns the same JWT payload used by register.
- */
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body

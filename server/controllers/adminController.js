@@ -139,9 +139,6 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
-/**
- * Admin use case: create a listing on behalf of an existing owner account.
- */
 const createHousing = async (req, res, next) => {
   try {
     const {
