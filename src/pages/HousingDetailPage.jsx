@@ -66,12 +66,17 @@ function HousingDetailPage() {
   const handleBooking = async (e) => {
     e.preventDefault();
 
+    const formData = new FormData(e.currentTarget);
+    const startDate = form.start_date || formData.get("start_date") || "";
+    const endDate = form.end_date || formData.get("end_date") || "";
+    const notes = form.notes || formData.get("notes") || "";
+
     if (!token) {
       navigate("/login");
       return;
     }
 
-    if (!form.start_date || !form.end_date) {
+    if (!startDate || !endDate) {
       setError("Start date and end date are required");
       return;
     }
@@ -83,9 +88,9 @@ function HousingDetailPage() {
 
       await api.post("/bookings", {
         housing_id: Number(id),
-        start_date: form.start_date,
-        end_date: form.end_date,
-        notes: form.notes,
+        start_date: startDate,
+        end_date: endDate,
+        notes,
       });
 
       setSuccess("Booking created successfully");
