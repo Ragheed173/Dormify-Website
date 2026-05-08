@@ -15,7 +15,10 @@ const User = sequelize.define(
     email: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: {
+        name: "uq_users_email",
+        msg: "Email must be unique",
+      },
       validate: {
         isEmail: true,
       },
