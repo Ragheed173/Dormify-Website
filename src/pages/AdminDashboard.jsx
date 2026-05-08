@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
 import { Link, useNavigate } from 'react-router-dom'
+import {
+  buildHousingPayload,
+  validateHousingForm,
+  validateUserForm,
+} from '../utils/validation'
 
 function AdminDashboard() {
   const { user, logout } = useAuth()
@@ -137,20 +142,18 @@ function AdminDashboard() {
   const handleUpdateHousing = async (e) => {
     e.preventDefault()
 
+    const validationError = validateHousingForm(housingForm)
+    if (validationError) {
+      setError(validationError)
+      setSuccess('')
+      return
+    }
+
     try {
       setError('')
       setSuccess('')
 
-      await api.put(`/admin/housings/${editingHousingId}`, {
-        title: housingForm.title,
-        description: housingForm.description,
-        location: housingForm.location,
-        price: Number(housingForm.price),
-        gender_allowed: housingForm.gender_allowed,
-        room_type: housingForm.room_type,
-        available_rooms: Number(housingForm.available_rooms),
-        status: housingForm.status,
-      })
+      await api.put(`/admin/housings/${editingHousingId}`, buildHousingPayload(housingForm))
 
       setSuccess('Housing updated successfully')
       cancelEditHousing()
@@ -202,6 +205,13 @@ function AdminDashboard() {
 
   const handleUpdateUser = async (e) => {
     e.preventDefault()
+
+    const validationError = validateUserForm(userForm)
+    if (validationError) {
+      setError(validationError)
+      setSuccess('')
+      return
+    }
 
     try {
       setError('')

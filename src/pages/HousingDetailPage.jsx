@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../api/axiosInstance";
+import { validateBookingForm } from "../utils/validation";
 
 function HousingDetailPage() {
   const { id } = useParams();
@@ -76,8 +77,14 @@ function HousingDetailPage() {
       return;
     }
 
-    if (!startDate || !endDate) {
-      setError("Start date and end date are required");
+    const validationError = validateBookingForm({
+      start_date: startDate,
+      end_date: endDate,
+      notes,
+    });
+
+    if (validationError) {
+      setError(validationError);
       return;
     }
 

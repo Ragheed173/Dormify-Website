@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
 import { Link, useNavigate } from 'react-router-dom'
+import {
+  buildHousingPayload,
+  validateHousingForm,
+  validateProfileForm,
+} from '../utils/validation'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
@@ -110,6 +115,13 @@ function OwnerDashboard() {
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
 
+    const validationError = validateProfileForm(profileForm)
+    if (validationError) {
+      setError(validationError)
+      setSuccess('')
+      return
+    }
+
     try {
       setProfileLoading(true)
       setError('')
@@ -142,25 +154,19 @@ function OwnerDashboard() {
   const handleHousingSubmit = async (e) => {
     e.preventDefault()
 
+    const validationError = validateHousingForm(housingForm, { includeImages: true })
+    if (validationError) {
+      setError(validationError)
+      setSuccess('')
+      return
+    }
+
     try {
       setHousingLoading(true)
       setError('')
       setSuccess('')
 
-      const payload = {
-        title: housingForm.title,
-        description: housingForm.description,
-        location: housingForm.location,
-        price: Number(housingForm.price),
-        gender_allowed: housingForm.gender_allowed,
-        room_type: housingForm.room_type,
-        available_rooms: Number(housingForm.available_rooms),
-        status: housingForm.status,
-        image_urls: housingForm.image_urls
-          .split('\n')
-          .map((item) => item.trim())
-          .filter(Boolean),
-      }
+      const payload = buildHousingPayload(housingForm, { includeImages: true })
 
       if (editingHousingId) {
         await api.put(`/owner/housings/${editingHousingId}`, payload)

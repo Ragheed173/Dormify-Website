@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
 import { Link, useNavigate  } from 'react-router-dom'
+import { validateProfileForm } from '../utils/validation'
 
 function StudentDashboard() {
   const { user, logout } = useAuth()
@@ -73,6 +74,13 @@ function StudentDashboard() {
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
+
+    const validationError = validateProfileForm(profileForm)
+    if (validationError) {
+      setError(validationError)
+      setSuccess('')
+      return
+    }
 
     try {
       setProfileLoading(true)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { validateLoginForm } from '../utils/validation'
 
 function LoginPage() {
   const { login } = useAuth()
@@ -16,9 +17,15 @@ function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
+    const validationError = validateLoginForm(form)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
+    setLoading(true)
     const result = await login(form.email, form.password)
 
     if (result.success) {

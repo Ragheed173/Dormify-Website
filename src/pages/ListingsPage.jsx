@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import HousingCard from '../components/HousingCard'
 import api from '../api/axiosInstance'
+import { validateHousingFilters } from '../utils/validation'
 
 function ListingsPage() {
   const [housings, setHousings] = useState([])
@@ -28,6 +29,20 @@ function ListingsPage() {
 
   useEffect(() => {
     const fetchHousings = async () => {
+      const validationError = validateHousingFilters(filters)
+      if (validationError) {
+        setHousings([])
+        setPagination({
+          totalItems: 0,
+          currentPage: 1,
+          totalPages: 1,
+          pageSize: 6,
+        })
+        setError(validationError)
+        setLoading(false)
+        return
+      }
+
       try {
         setLoading(true)
 

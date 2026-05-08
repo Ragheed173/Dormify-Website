@@ -9,7 +9,7 @@ const register = {
     name: { type: "string", required: true, minLength: 2, maxLength: 120 },
     email: { type: "email", required: true, maxLength: 160 },
     password: { type: "password", required: true },
-    phone: { type: "string", maxLength: 30, allowEmpty: true },
+    phone: { type: "phone", allowEmpty: true },
     role: {
       type: "enum",
       values: ["student", "owner"],
@@ -28,7 +28,7 @@ const profileUpdate = {
   body: {
     name: { type: "string", minLength: 2, maxLength: 120 },
     email: { type: "email", maxLength: 160 },
-    phone: { type: "string", maxLength: 30, allowEmpty: true },
+    phone: { type: "phone", allowEmpty: true },
   },
 };
 

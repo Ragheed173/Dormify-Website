@@ -1,5 +1,7 @@
 const AppError = require("../utils/AppError");
 
+const PHONE_PATTERN = /^\+?[0-9\s-]{7,30}$/;
+
 const isEmpty = (value, allowEmpty = false) => {
   if (value === undefined || value === null) return true;
   return !allowEmpty && typeof value === "string" && value.trim() === "";
@@ -47,6 +49,10 @@ const validateValue = (req, sourceName, source, field, rules, errors) => {
     source[field] = value;
   }
 
+  if (rules.allowEmpty && value === "") {
+    return;
+  }
+
   if (rules.type === "string") {
     if (typeof value !== "string") {
       addError(errors, field, `${label} must be a string`);
@@ -68,11 +74,22 @@ const validateValue = (req, sourceName, source, field, rules, errors) => {
       addError(errors, field, `${label} must be a string`);
       return;
     }
-    if (!/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/.test(value)) {
+    if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]).{8,}$/.test(value)) {
       addError(
         errors,
         field,
-        `${label} must be at least 8 characters and include at least one letter and one number`
+        `${label} must be at least 8 characters and include one uppercase letter, one number, and one special character`
+      );
+      return;
+    }
+  }
+
+  if (rules.type === "phone") {
+    if (typeof value !== "string" || !PHONE_PATTERN.test(value)) {
+      addError(
+        errors,
+        field,
+        `${label} must contain 7 to 30 digits and may include +, spaces, or hyphens`
       );
       return;
     }

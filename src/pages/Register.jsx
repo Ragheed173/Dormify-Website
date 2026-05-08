@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { validateRegisterForm } from '../utils/validation'
 
 function RegisterPage() {
   const { register } = useAuth()
@@ -17,14 +18,6 @@ function RegisterPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const isValidEmail = (email) => {
-    return /^[A-Za-z0-9._%+-]+@(gmail\.com|stu\.najah\.edu)$/.test(email)
-  }
-
-  const isStrongPassword = (password) => {
-    return /^(?=.*[A-Z])(?=.*[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]).{8,}$/.test(password)
-  }
-
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -32,22 +25,14 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    const validationError = validateRegisterForm(form)
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
     setLoading(true)
-
-    if (!isValidEmail(form.email)) {
-      setError('Email must end with @gmail.com or @stu.najah.edu')
-      setLoading(false)
-      return
-    }
-
-    if (!isStrongPassword(form.password)) {
-      setError(
-        'Password must be at least 8 characters long and include at least one uppercase letter and one special character'
-      )
-      setLoading(false)
-      return
-    }
-
     const result = await register(
       form.name,
       form.email,
@@ -155,7 +140,7 @@ function RegisterPage() {
           </div>
 
           <div className="small text-muted mb-4">
-            Password must be at least 8 characters and include at least one letter and one number.
+            Password must be at least 8 characters and include one uppercase letter, one number, and one special character.
           </div>
 
           <button
