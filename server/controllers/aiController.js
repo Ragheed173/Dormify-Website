@@ -1,4 +1,5 @@
 const aiService = require("../services/aiService");
+const aiHousingSearchService = require("../services/aiHousingSearchService");
 
 const getAiHint = (status, message) => {
   const text = String(message || "");
@@ -71,7 +72,18 @@ const explainTopic = async (req, res) => {
   }
 };
 
+const searchHousing = async (req, res) => {
+  const query = req.body.query.trim();
+  const output = await aiHousingSearchService.searchHousingWithAi(query);
+
+  return res.status(200).json({
+    message: "Smart housing search completed successfully",
+    data: output,
+  });
+};
+
 module.exports = {
   getInfo,
   explainTopic,
+  searchHousing,
 };

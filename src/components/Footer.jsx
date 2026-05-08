@@ -28,7 +28,7 @@ function Footer() {
               {[
                 { label: 'Home', to: '/' },
                 { label: 'Search', to: '/listings' },
-                { label: 'AI Explain', to: '/ai-explain' },
+                { label: 'AI Assistant', to: '/ai-assistant' },
                 { label: 'Login', to: '/login' },
                 { label: 'Register', to: '/register' },
               ].map((l) => (

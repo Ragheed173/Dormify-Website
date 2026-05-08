@@ -1,23 +1,34 @@
 import { useEffect, useState } from 'react'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
+import HousingCard from '../components/HousingCard'
 import api from '../api/axiosInstance'
-import { validateAiExplainForm } from '../utils/validation'
+import { validateAiHousingSearchForm } from '../utils/validation'
 
 const examples = [
-  'what JWT is',
-  'how booking status works',
-  'what an HTTP request is',
+  'I need a single room near the university under 150',
+  'I need a single room under 150',
+  'Housing for female students under 200',
 ]
 
 const sourceBadgeClass = {
   groq: 'bg-success',
   gemini: 'bg-primary',
   mock: 'bg-secondary',
+  local: 'bg-info',
+}
+
+const filterLabels = {
+  single: 'Single room',
+  double: 'Double room',
+  triple: 'Triple room',
+  male: 'Male',
+  female: 'Female',
+  both: 'Both',
 }
 
 function AiExplainPage() {
-  const [topic, setTopic] = useState('')
+  const [query, setQuery] = useState('')
   const [aiInfo, setAiInfo] = useState(null)
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -40,14 +51,14 @@ function AiExplainPage() {
   }, [])
 
   const handleExampleClick = (value) => {
-    setTopic(value)
+    setQuery(value)
     setError('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const validationError = validateAiExplainForm({ topic })
+    const validationError = validateAiHousingSearchForm({ query })
     if (validationError) {
       setError(validationError)
       setResult(null)
@@ -59,17 +70,13 @@ function AiExplainPage() {
       setError('')
       setResult(null)
 
-      const res = await api.post('/ai/explain', {
-        topic: topic.trim(),
+      const res = await api.post('/ai/housing-search', {
+        query: query.trim(),
       })
 
       setResult(res.data?.data || null)
     } catch (err) {
-      setError(
-        err.response?.data?.hint ||
-          err.response?.data?.message ||
-          'Failed to generate explanation'
-      )
+      setError(err.response?.data?.message || 'Failed to find matching housing')
     } finally {
       setLoading(false)
     }
@@ -86,6 +93,9 @@ function AiExplainPage() {
           ? 'mock'
           : '')
 
+  const filters = result?.filters || {}
+  const housings = result?.housings || []
+
   return (
     <>
       <Navbar />
@@ -94,8 +104,8 @@ function AiExplainPage() {
         <div className="container">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-              <h2 className="fw-bold mb-1">AI Explain</h2>
-              <p className="mb-0 opacity-75">Get short plain-language explanations for study topics.</p>
+              <h2 className="fw-bold mb-1">AI Housing Assistant</h2>
+              <p className="mb-0 opacity-75">Search Dormify listings using a normal student request.</p>
             </div>
 
             <div className="text-md-end">
@@ -109,24 +119,24 @@ function AiExplainPage() {
       </section>
 
       <main className="container py-4 py-lg-5">
-        <div className="row g-4 justify-content-center">
-          <div className="col-12 col-lg-5">
+        <div className="row g-4">
+          <div className="col-12 col-lg-4">
             <div className="card border-0 shadow-sm rounded-3">
               <div className="card-body p-4">
                 <form onSubmit={handleSubmit}>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Topic</label>
+                    <label className="form-label fw-semibold">Student request</label>
                     <textarea
                       className="form-control"
-                      rows="5"
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      placeholder="Example: what JWT is"
+                      rows="6"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="I need a single room near the university under 150"
                       maxLength={500}
                     ></textarea>
                     <div className="d-flex justify-content-between mt-2">
                       <small className="text-muted">2 to 500 characters</small>
-                      <small className="text-muted">{topic.length}/500</small>
+                      <small className="text-muted">{query.length}/500</small>
                     </div>
                   </div>
 
@@ -149,12 +159,12 @@ function AiExplainPage() {
                     {loading ? (
                       <>
                         <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                        Generating
+                        Searching
                       </>
                     ) : (
                       <>
                         <i className="bi bi-stars me-2"></i>
-                        Explain
+                        Find Housings
                       </>
                     )}
                   </button>
@@ -163,43 +173,74 @@ function AiExplainPage() {
             </div>
           </div>
 
-          <div className="col-12 col-lg-7">
-            <div className="card border-0 shadow-sm rounded-3 h-100">
+          <div className="col-12 col-lg-8">
+            <div className="card border-0 shadow-sm rounded-3 mb-4">
               <div className="card-body p-4">
-                <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
+                <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
                   <div>
-                    <h5 className="fw-bold mb-1">Explanation</h5>
+                    <h5 className="fw-bold mb-1">Smart matches</h5>
                     <p className="text-muted small mb-0">
-                      {result ? result.topic : 'Your answer will appear here.'}
+                      {result ? result.summary : 'Matching filters and housing results will appear here.'}
                     </p>
                   </div>
 
-                  {result?.source && (
-                    <span className={`badge ${sourceBadgeClass[result.source] || 'bg-secondary'} text-capitalize`}>
-                      {result.source}
+                  {result && (
+                    <span className="badge bg-primary px-3 py-2">
+                      {result.resultsCount} found
                     </span>
                   )}
                 </div>
 
-                {result ? (
-                  <>
-                    <p className="mb-4" style={{ lineHeight: '1.8' }}>
-                      {result.explanation}
-                    </p>
+                {result?.warning && <div className="alert alert-warning small mt-3 mb-0">{result.warning}</div>}
 
-                    <div className="border-top pt-3 small text-muted">
-                      <i className="bi bi-cpu me-2"></i>
-                      {result.model || 'model unavailable'}
-                    </div>
-                  </>
-                ) : (
-                  <div className="bg-light rounded-3 p-4 text-center text-muted">
-                    <i className="bi bi-chat-square-text fs-1 d-block mb-3"></i>
-                    <p className="mb-0">Write a topic and press Explain.</p>
+                {result && (
+                  <div className="d-flex flex-wrap gap-2 mt-3">
+                    {filters.room_type && (
+                      <span className="badge bg-light text-dark border">{filterLabels[filters.room_type]}</span>
+                    )}
+                    {filters.maxPrice !== null && filters.maxPrice !== undefined && (
+                      <span className="badge bg-light text-dark border">Under ${filters.maxPrice}</span>
+                    )}
+                    {filters.minPrice !== null && filters.minPrice !== undefined && (
+                      <span className="badge bg-light text-dark border">From ${filters.minPrice}</span>
+                    )}
+                    {filters.gender_allowed && (
+                      <span className="badge bg-light text-dark border">
+                        {filterLabels[filters.gender_allowed]}
+                      </span>
+                    )}
+                    {filters.nearUniversity && (
+                      <span className="badge bg-light text-dark border">Near university</span>
+                    )}
                   </div>
                 )}
               </div>
             </div>
+
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status"></div>
+                <p className="text-muted mt-3">Searching available housing...</p>
+              </div>
+            ) : result && housings.length === 0 ? (
+              <div className="text-center py-5 bg-light rounded-3">
+                <i className="bi bi-search display-1 text-muted"></i>
+                <p className="text-muted mt-3 mb-0">No available housing matched this request.</p>
+              </div>
+            ) : housings.length > 0 ? (
+              <div className="row g-4">
+                {housings.map((housing) => (
+                  <div key={housing.id} className="col-12 col-md-6 col-xl-4">
+                    <HousingCard housing={housing} />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-light rounded-3 p-5 text-center text-muted">
+                <i className="bi bi-house-search fs-1 d-block mb-3"></i>
+                <p className="mb-0">Start with a housing request.</p>
+              </div>
+            )}
           </div>
         </div>
       </main>

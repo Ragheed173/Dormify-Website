@@ -23,6 +23,7 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/auth-success" element={<AuthSuccess />} />
+        <Route path="/ai-assistant" element={<AiExplainPage />} />
         <Route path="/ai-explain" element={<AiExplainPage />} />
 
         <Route

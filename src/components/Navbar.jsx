@@ -44,7 +44,7 @@ function Navbar() {
               <Link className="nav-link fw-medium" to="/listings">Search</Link>
             </li>
             <li className="nav-item">
-              <Link className="nav-link fw-medium" to="/ai-explain">AI Explain</Link>
+              <Link className="nav-link fw-medium" to="/ai-assistant">AI Assistant</Link>
             </li>
             <li className="nav-item">
               <a className="nav-link fw-medium" href="#how-it-works">How it Works</a>

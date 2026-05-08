@@ -8,5 +8,10 @@ const asyncHandler = require("../utils/asyncHandler");
 
 router.get("/", aiController.getInfo);
 router.post("/explain", validateRequest(schemas.aiExplain), asyncHandler(aiController.explainTopic));
+router.post(
+  "/housing-search",
+  validateRequest(schemas.aiHousingSearch),
+  asyncHandler(aiController.searchHousing)
+);
 
 module.exports = router;

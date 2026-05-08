@@ -159,6 +159,28 @@
  *       502:
  *         description: LLM request failed
  *
+ * /api/ai/housing-search:
+ *   post:
+ *     summary: Search available housing using a natural-language student request
+ *     tags: [AI]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/AiHousingSearchRequest"
+ *     responses:
+ *       200:
+ *         description: Smart housing search completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: "#/components/schemas/AiHousingSearchResponse"
+ *       400:
+ *         description: Query validation failed
+ *       500:
+ *         description: Failed to search housing
+ *
  * /api/housings:
  *   get:
  *     summary: Get public housing listings

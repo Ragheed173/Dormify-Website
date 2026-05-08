@@ -183,6 +183,17 @@ export const validateAiExplainForm = ({ topic }) =>
     !isBlank(topic) && String(topic).trim().length > 500 ? 'Topic must be at most 500 characters' : ''
   )
 
+export const validateAiHousingSearchForm = ({ query }) =>
+  firstError(
+    isBlank(query) ? 'Student request is required' : '',
+    !isBlank(query) && String(query).trim().length < 2
+      ? 'Student request must be at least 2 characters'
+      : '',
+    !isBlank(query) && String(query).trim().length > 500
+      ? 'Student request must be at most 500 characters'
+      : ''
+  )
+
 export const validateHousingForm = (form, { includeImages = false } = {}) => {
   const price = Number(form.price)
   const availableRooms = Number(form.available_rooms)

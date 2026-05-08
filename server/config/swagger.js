@@ -377,6 +377,66 @@ const swaggerOptions = {
             },
           },
         },
+        AiHousingSearchRequest: {
+          type: "object",
+          required: ["query"],
+          properties: {
+            query: {
+              type: "string",
+              minLength: 2,
+              maxLength: 500,
+              example: "بدي سكن قريب ع الجامعة غرفة وحدة وتحت 150",
+            },
+          },
+        },
+        AiHousingSearchResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "Smart housing search completed successfully",
+            },
+            data: {
+              type: "object",
+              properties: {
+                request: {
+                  type: "string",
+                  example: "بدي سكن قريب ع الجامعة غرفة وحدة وتحت 150",
+                },
+                summary: { type: "string" },
+                filters: {
+                  type: "object",
+                  properties: {
+                    maxPrice: { type: "number", nullable: true, example: 150 },
+                    minPrice: { type: "number", nullable: true },
+                    room_type: {
+                      type: "string",
+                      nullable: true,
+                      enum: ["single", "double", "triple"],
+                      example: "single",
+                    },
+                    gender_allowed: {
+                      type: "string",
+                      nullable: true,
+                      enum: ["male", "female", "both"],
+                    },
+                    location: { type: "string", nullable: true },
+                    searchText: { type: "string", nullable: true },
+                    nearUniversity: { type: "boolean", example: true },
+                  },
+                },
+                source: { type: "string", example: "groq" },
+                model: { type: "string", example: "llama-3.1-8b-instant" },
+                warning: { type: "string", nullable: true },
+                resultsCount: { type: "integer", example: 3 },
+                housings: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/Housing" },
+                },
+              },
+            },
+          },
+        },
       },
     },
   },

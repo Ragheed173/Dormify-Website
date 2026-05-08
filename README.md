@@ -9,7 +9,7 @@ Dormify is a student housing platform with a React frontend and an Express/MySQL
 - Validation: reusable request validation for params, query strings, and request bodies.
 - Error handling: centralized error middleware returns consistent `message`, `code`, and validation `details`.
 - Documentation: OpenAPI/Swagger is available at `http://localhost:5000/api-docs`.
-- AI explain endpoint: `POST /api/ai/explain` can use Gemini, Groq, or mock mode for class demos.
+- AI assistant endpoints: `POST /api/ai/explain` explains topics, and `POST /api/ai/housing-search` finds matching housing from Dormify listings.
 - Code structure: routes call controllers, controllers focus on use cases, and shared booking status logic lives in `server/services/bookingService.js`.
 - Database sync: `DB_SYNC_ALTER=true` can be used during development when schema changes need to be applied automatically.
 
@@ -43,12 +43,18 @@ Frontend URL: `http://localhost:5173`
 
 Swagger URL: `http://localhost:5000/api-docs`
 
-## AI Explain Endpoint
+## AI Endpoints
 
 Use `POST /api/ai/explain` with JSON:
 
 ```json
 { "topic": "what an HTTP request is" }
+```
+
+Use `POST /api/ai/housing-search` with JSON:
+
+```json
+{ "query": "I need a single room near the university under 150" }
 ```
 
 Set one provider in `.env`:
