@@ -1,16 +1,75 @@
 const AppError = require("../utils/AppError");
 
-const PHONE_PATTERN = /^\+?[0-9\s-]{7,30}$/;
-
 const isEmpty = (value, allowEmpty = false) => {
   if (value === undefined || value === null) return true;
   return !allowEmpty && typeof value === "string" && value.trim() === "";
 };
 
+const isValidEmail = (value) => {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (trimmed === "" || trimmed.includes(" ")) return false;
+
+  const atIndex = trimmed.indexOf("@");
+  if (atIndex <= 0 || atIndex === trimmed.length - 1) return false;
+
+  const domain = trimmed.slice(atIndex + 1);
+  const dotIndex = domain.indexOf(".");
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false;
+
+  return !domain.split(".").some((part) => part === "");
+};
+
+const isStrongPassword = (value) => {
+  if (typeof value !== "string" || value.length < 8) return false;
+
+  let hasUpper = false;
+  let hasDigit = false;
+  let hasSpecial = false;
+  const specialChars = "!@#$%^&*()_-+=[\\]{};':\"\\|,.<>/?";
+
+  for (const char of value) {
+    if (char >= "A" && char <= "Z") hasUpper = true;
+    else if (char >= "0" && char <= "9") hasDigit = true;
+    else if (specialChars.includes(char)) hasSpecial = true;
+  }
+
+  return hasUpper && hasDigit && hasSpecial;
+};
+
+const isValidPhone = (value) => {
+  if (typeof value !== "string") return false;
+  const trimmed = value.trim();
+  if (trimmed === "") return false;
+
+  let digits = 0;
+  for (let i = 0; i < trimmed.length; i += 1) {
+    const char = trimmed[i];
+    if (char === "+" && i === 0) continue;
+    if (char === " " || char === "-") continue;
+    if (char >= "0" && char <= "9") digits += 1;
+    else return false;
+  }
+
+  return digits >= 7 && digits <= 30;
+};
+
 const isValidDateOnly = (value) => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00.000Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+  if (typeof value !== "string" || value.length !== 10) return false;
+  if (value[4] !== "-" || value[7] !== "-") return false;
+
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false;
+  if (month < 1 || month > 12) return false;
+
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > daysInMonth) return false;
+
+  return `${year.toString().padStart(4, "0")}-${month.toString().padStart(2, "0")}-${day
+    .toString()
+    .padStart(2, "0")}` === value;
 };
 
 const isValidUrlLike = (value) => {
@@ -61,7 +120,7 @@ const validateValue = (req, sourceName, source, field, rules, errors) => {
   }
 
   if (rules.type === "email") {
-    if (typeof value !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (typeof value !== "string" || !isValidEmail(value)) {
       addError(errors, field, `${label} must be a valid email address`);
       return;
     }
@@ -74,7 +133,7 @@ const validateValue = (req, sourceName, source, field, rules, errors) => {
       addError(errors, field, `${label} must be a string`);
       return;
     }
-    if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]).{8,}$/.test(value)) {
+    if (!isStrongPassword(value)) {
       addError(
         errors,
         field,
@@ -85,7 +144,7 @@ const validateValue = (req, sourceName, source, field, rules, errors) => {
   }
 
   if (rules.type === "phone") {
-    if (typeof value !== "string" || !PHONE_PATTERN.test(value)) {
+    if (typeof value !== "string" || !isValidPhone(value)) {
       addError(
         errors,
         field,

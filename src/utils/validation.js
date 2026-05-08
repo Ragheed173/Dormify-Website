@@ -1,15 +1,76 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const REGISTER_EMAIL_PATTERN = /^[A-Za-z0-9._%+-]+@(gmail\.com|stu\.najah\.edu)$/
-const PASSWORD_PATTERN = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=[\]{};':"\\|,.<>/?]).{8,}$/
-const PHONE_PATTERN = /^\+?[0-9\s-]{7,30}$/
-const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/
-
 const isBlank = (value) => value === undefined || value === null || String(value).trim() === ''
 
+const isValidEmail = (value) => {
+  if (typeof value !== 'string') return false
+  const trimmed = value.trim()
+  if (trimmed === '' || trimmed.includes(' ')) return false
+
+  const atIndex = trimmed.indexOf('@')
+  if (atIndex <= 0 || atIndex === trimmed.length - 1) return false
+
+  const domain = trimmed.slice(atIndex + 1)
+  const dotIndex = domain.indexOf('.')
+  if (dotIndex <= 0 || dotIndex === domain.length - 1) return false
+
+  return !domain.split('.').some((part) => part === '')
+}
+
+const isAllowedRegisterEmail = (value) => {
+  if (!isValidEmail(value)) return false
+  const email = String(value).trim().toLowerCase()
+  return email.endsWith('@gmail.com') || email.endsWith('@stu.najah.edu')
+}
+
+const isValidPassword = (value) => {
+  if (typeof value !== 'string' || value.length < 8) return false
+
+  let hasUpper = false
+  let hasDigit = false
+  let hasSpecial = false
+  const specialChars = `!@#$%^&*()_-+=[\\]{};':"\\|,.<>/?`
+
+  for (const char of value) {
+    if (char >= 'A' && char <= 'Z') hasUpper = true
+    else if (char >= '0' && char <= '9') hasDigit = true
+    else if (specialChars.includes(char)) hasSpecial = true
+  }
+
+  return hasUpper && hasDigit && hasSpecial
+}
+
+const isValidPhone = (value) => {
+  if (typeof value !== 'string') return false
+  const trimmed = value.trim()
+  if (trimmed === '') return false
+
+  let digits = 0
+  for (let i = 0; i < trimmed.length; i += 1) {
+    const char = trimmed[i]
+    if (char === '+' && i === 0) continue
+    if (char === ' ' || char === '-') continue
+    if (char >= '0' && char <= '9') digits += 1
+    else return false
+  }
+
+  return digits >= 7 && digits <= 30
+}
+
 const isValidDateOnly = (value) => {
-  if (!DATE_ONLY_PATTERN.test(value)) return false
-  const date = new Date(`${value}T00:00:00.000Z`)
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
+  if (typeof value !== 'string' || value.length !== 10) return false
+  if (value[4] !== '-' || value[7] !== '-') return false
+
+  const year = Number(value.slice(0, 4))
+  const month = Number(value.slice(5, 7))
+  const day = Number(value.slice(8, 10))
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return false
+  if (month < 1 || month > 12) return false
+
+  const daysInMonth = new Date(year, month, 0).getDate()
+  if (day < 1 || day > daysInMonth) return false
+
+  return `${year.toString().padStart(4, '0')}-${month.toString().padStart(2, '0')}-${day
+    .toString()
+    .padStart(2, '0')}` === value
 }
 
 const isValidUrlLike = (value) => {
@@ -34,13 +95,13 @@ export const parseImageUrls = (value) =>
 
 export const validateEmail = (email) => {
   if (isBlank(email)) return 'Email is required'
-  if (!EMAIL_PATTERN.test(String(email).trim())) return 'Email must be a valid email address'
+  if (!isValidEmail(email)) return 'Email must be a valid email address'
   return ''
 }
 
 export const validateRegisterEmail = (email) => {
   if (isBlank(email)) return 'Email is required'
-  if (!REGISTER_EMAIL_PATTERN.test(String(email).trim())) {
+  if (!isAllowedRegisterEmail(email)) {
     return 'Email must end with @gmail.com or @stu.najah.edu'
   }
   return ''
@@ -48,7 +109,7 @@ export const validateRegisterEmail = (email) => {
 
 export const validatePassword = (password) => {
   if (isBlank(password)) return 'Password is required'
-  if (!PASSWORD_PATTERN.test(password)) {
+  if (!isValidPassword(password)) {
     return 'Password must be at least 8 characters and include one uppercase letter, one number, and one special character'
   }
   return ''
@@ -56,7 +117,7 @@ export const validatePassword = (password) => {
 
 export const validatePhone = (phone) => {
   if (isBlank(phone)) return ''
-  if (!PHONE_PATTERN.test(String(phone).trim())) {
+  if (!isValidPhone(phone)) {
     return 'Phone must contain 7 to 30 digits and may include +, spaces, or hyphens'
   }
   return ''
