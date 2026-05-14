@@ -12,6 +12,16 @@ const dbName = process.env.DB_NAME || 'housing_db'
 const dbUser = process.env.DB_USER || 'root'
 const dbPassword = process.env.DB_PASSWORD ?? ''
 
+// Railway public MySQL (e.g. *.rlwy.net) expects TLS; DBeaver often enables SSL automatically.
+const useDbSsl =
+  process.env.DB_SSL === 'false'
+    ? false
+    : process.env.DB_SSL === 'true' || String(dbHost).includes('rlwy.net')
+
+const sslOption = useDbSsl
+  ? { rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true' }
+  : undefined
+
 const pool = mysql.createPool({
   host: dbHost,
   port: dbPort,
@@ -21,6 +31,7 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: Number(process.env.DB_POOL_LIMIT) || 10,
   queueLimit: 0,
+  ...(sslOption ? { ssl: sslOption } : {}),
 })
 
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
@@ -30,6 +41,7 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   logging: false,
   dialectOptions: {
     decimalNumbers: true,
+    ...(sslOption ? { ssl: sslOption } : {}),
   },
 })
 

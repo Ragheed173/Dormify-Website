@@ -183,7 +183,16 @@ const completePasswordChangeWithToken = async (req, res, next) => {
 
     const oauthPlaceholder = user.password === 'google_oauth_user'
     if (!oauthPlaceholder) {
-      const sameAsCurrent = await bcrypt.compare(newPassword, user.password)
+      let sameAsCurrent = false
+      try {
+        sameAsCurrent = await bcrypt.compare(newPassword, user.password)
+      } catch {
+        throw new AppError(
+          'Your account password data is invalid. Try resetting via Google sign-in or contact support.',
+          400,
+          'PASSWORD_VERIFY_FAILED'
+        )
+      }
       if (sameAsCurrent) {
         throw new AppError('New password must be different from your current password', 400, 'SAME_PASSWORD')
       }

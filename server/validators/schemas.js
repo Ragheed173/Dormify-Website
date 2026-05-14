@@ -210,6 +210,7 @@ module.exports = {
   idParam,
   register,
   login,
+  passwordChangeComplete,
   profileUpdate,
   userUpdate,
   housingBody,

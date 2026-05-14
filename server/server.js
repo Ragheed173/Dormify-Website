@@ -32,7 +32,14 @@ const startServer = async () => {
     await sequelize.authenticate();
     console.log("Database connected successfully");
 
-    const syncOptions = process.env.DB_SYNC_ALTER === "true" ? { alter: true } : {};
+    const syncOptions =
+      process.env.DB_SYNC_ALTER === "true"
+        ? { alter: true }
+        : process.env.DB_SYNC_ALTER === "false"
+          ? {}
+          : process.env.NODE_ENV === "production"
+            ? {}
+            : { alter: true };
     await sequelize.sync(syncOptions);
     console.log("Database synced");
 
