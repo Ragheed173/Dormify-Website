@@ -11,7 +11,7 @@ import OwnerDashboard from './pages/OwnerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import AuthSuccess from './pages/AuthSuccess'
 import AiExplainPage from './pages/AiExplainPage'
-
+import PasswordChangeConfirmPage from './pages/PasswordChangeConfirmPage'
 
 function App() {
   return (
@@ -25,6 +25,7 @@ function App() {
         <Route path="/auth-success" element={<AuthSuccess />} />
         <Route path="/ai-assistant" element={<AiExplainPage />} />
         <Route path="/ai-explain" element={<AiExplainPage />} />
+        <Route path="/password-change" element={<PasswordChangeConfirmPage />} />
 
         <Route
           path="/booking/confirm/:id"

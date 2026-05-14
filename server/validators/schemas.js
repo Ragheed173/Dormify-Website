@@ -23,7 +23,12 @@ const login = {
     password: { type: "string", required: true, minLength: 1 },
   },
 };
-
+const passwordChangeComplete = {
+  body: {
+    token: { type: "string", required: true, minLength: 64, maxLength: 64 },
+    newPassword: { type: "password", required: true },
+  },
+};
 const profileUpdate = {
   body: {
     name: { type: "string", minLength: 2, maxLength: 120 },

@@ -5,17 +5,18 @@ const { updateBookingStatusWithInventory } = require('../services/bookingService
 
 const getOwnerProfile = async (req, res, next) => {
   try {
-    const owner = await User.findByPk(req.user.id, {
-      attributes: { exclude: ['password'] },
-    })
+    const owner = await User.findByPk(req.user.id)
 
     if (!owner) {
       throw new AppError('Owner not found', 404, 'USER_NOT_FOUND')
     }
-
+   const data = owner.toJSON()
+    const oauthNoLocalPassword = data.password === 'google_oauth_user'
+    delete data.password
+    data.oauth_no_local_password = oauthNoLocalPassword
     return res.status(200).json({
       message: 'Owner profile fetched successfully',
-      data: owner,
+      data,
     })
   } catch (error) {
     return next(error)
@@ -48,13 +49,15 @@ const updateOwnerProfile = async (req, res, next) => {
 
     await owner.save()
 
-    const updatedOwner = await User.findByPk(req.user.id, {
-      attributes: { exclude: ['password'] },
-    })
+   await owner.reload()
+    const data = owner.toJSON()
+    const oauthNoLocalPassword = data.password === 'google_oauth_user'
+    delete data.password
+    data.oauth_no_local_password = oauthNoLocalPassword
 
     return res.status(200).json({
       message: 'Owner profile updated successfully',
-      data: updatedOwner,
+      data,
     })
   } catch (error) {
     return next(error)

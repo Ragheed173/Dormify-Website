@@ -14,6 +14,7 @@ function StudentDashboard() {
 
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
+  const [passwordEmailLoading, setPasswordEmailLoading] = useState(false)
   const [cancelLoadingId, setCancelLoadingId] = useState(null)
 
   const [error, setError] = useState('')
@@ -71,7 +72,20 @@ function StudentDashboard() {
       [name]: value,
     }))
   }
+const handleRequestPasswordEmail = async () => {
+    try {
+      setPasswordEmailLoading(true)
+      setError('')
+      setSuccess('')
 
+      const res = await api.post('/auth/password/change-request')
+      setSuccess(res.data?.message || 'Check your email for the confirmation link.')
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not send the confirmation email.')
+    } finally {
+      setPasswordEmailLoading(false)
+    }
+  }
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
 
@@ -271,6 +285,26 @@ function StudentDashboard() {
             </div>
           </div>
         </form>
+        <hr className="my-4" />
+
+        <h6 className="fw-bold mb-3">Change password</h6>
+        <p className="text-muted small mb-3">
+          For your security, we send a confirmation link to your account email (
+          <strong>{profile?.email || user?.email}</strong>). Open the link, then choose your new password. The link
+          expires in one hour.
+        </p>
+        <p className="text-muted small mb-3" dir="rtl">
+          لأمان حسابك، نرسل رابط تأكيد إلى بريدك المسجّل. افتح الرابط من الإيميل ثم اختر كلمة المرور الجديدة (صالح
+          لمدة ساعة).
+        </p>
+        <button
+          type="button"
+          className="btn btn-outline-primary"
+          disabled={passwordEmailLoading}
+          onClick={handleRequestPasswordEmail}
+        >
+          {passwordEmailLoading ? 'Sending...' : 'Send confirmation email'}
+        </button>
       </div>
     </div>
   )
