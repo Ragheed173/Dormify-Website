@@ -4,17 +4,19 @@ const { updateBookingStatusWithInventory } = require("../services/bookingService
 
 const getStudentProfile = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
-    });
+    const user = await User.findByPk(req.user.id);
 
     if (!user) {
       throw new AppError("User not found", 404, "USER_NOT_FOUND");
     }
 
+    const data = user.toJSON();
+    const oauthNoLocalPassword = data.password === "google_oauth_user";
+    delete data.password;
+    data.oauth_no_local_password = oauthNoLocalPassword;
     return res.status(200).json({
       message: "Profile fetched successfully",
-      data: user,
+      data,
     });
   } catch (error) {
     return next(error);
@@ -47,13 +49,15 @@ const updateStudentProfile = async (req, res, next) => {
 
     await user.save();
 
-    const updatedUser = await User.findByPk(req.user.id, {
-      attributes: { exclude: ["password"] },
-    });
+    await user.reload();
+    const data = user.toJSON();
+    const oauthNoLocalPassword = data.password === "google_oauth_user";
+    delete data.password;
+    data.oauth_no_local_password = oauthNoLocalPassword;
 
     return res.status(200).json({
       message: "Profile updated successfully",
-      data: updatedUser,
+      data,
     });
   } catch (error) {
     return next(error);

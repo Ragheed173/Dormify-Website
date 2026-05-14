@@ -217,6 +217,19 @@ const swaggerOptions = {
             password: { type: "string", format: "password", example: "Password123" },
           },
         },
+        PasswordChangeCompleteRequest: {
+          type: "object",
+          required: ["token", "newPassword"],
+          properties: {
+            token: {
+              type: "string",
+              minLength: 64,
+              maxLength: 64,
+              description: "Secret token from the password-change email link",
+            },
+            newPassword: { type: "string", format: "password", example: "NewPassword456!" },
+          },
+        },
         ProfileUpdateRequest: {
           type: "object",
           properties: {

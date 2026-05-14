@@ -131,7 +131,16 @@ export const validateProfileForm = ({ name, email, phone }) =>
     validateEmail(email),
     validatePhone(phone)
   )
-
+export const validatePasswordChangeConfirm = ({ newPassword, newPasswordConfirm }) =>
+  firstError(
+    validatePassword(newPassword),
+    isBlank(newPasswordConfirm) ? 'Please confirm your new password' : '',
+    !isBlank(newPassword) &&
+    !isBlank(newPasswordConfirm) &&
+    newPassword !== newPasswordConfirm
+      ? 'New passwords do not match'
+      : ''
+  )
 export const validateLoginForm = ({ email, password }) =>
   firstError(validateEmail(email), isBlank(password) ? 'Password is required' : '')
 

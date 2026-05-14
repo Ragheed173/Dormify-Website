@@ -44,10 +44,24 @@ const User = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    
+    password_change_token_hash: {
+      type: DataTypes.STRING(64),
+      allowNull: true,
+    },
+    password_change_token_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",
     timestamps: true,
+    defaultScope: {
+      attributes: {
+        exclude: ["password_change_token_hash", "password_change_token_expires"],
+      },
+    },
   },
 );
 

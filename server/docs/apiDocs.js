@@ -58,6 +58,40 @@
  *       500:
  *         description: Login failed
  *
+ * /api/auth/password/change-request:
+ *   post:
+ *     summary: Email a link to confirm password change (student or owner)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Confirmation email sent (if mail is configured)
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Role not allowed
+ *       503:
+ *         description: Email not configured or send failed
+ *
+ * /api/auth/password/change-complete:
+ *   post:
+ *     summary: Set new password using token from email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: "#/components/schemas/PasswordChangeCompleteRequest"
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *       400:
+ *         description: Validation failed, invalid or expired token, or same password
+ *       403:
+ *         description: Forbidden
+ *
  * /api/auth/google:
  *   get:
  *     summary: Start Google OAuth login
