@@ -12,7 +12,6 @@ const dbName = process.env.DB_NAME || 'housing_db'
 const dbUser = process.env.DB_USER || 'root'
 const dbPassword = process.env.DB_PASSWORD ?? ''
 
-// Railway public MySQL (e.g. *.rlwy.net) expects TLS; DBeaver often enables SSL automatically.
 const useDbSsl =
   process.env.DB_SSL === 'false'
     ? false

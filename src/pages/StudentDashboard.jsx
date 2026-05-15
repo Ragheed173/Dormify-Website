@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
 import { Link, useNavigate  } from 'react-router-dom'
 import { validateProfileForm } from '../utils/validation'
-
+import { resolveImageUrl } from '../utils/imageUrl'
 function StudentDashboard() {
   const { user, logout } = useAuth()
 

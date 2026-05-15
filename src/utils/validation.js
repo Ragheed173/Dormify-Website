@@ -203,10 +203,14 @@ export const validateAiHousingSearchForm = ({ query }) =>
       : ''
   )
 
-export const validateHousingForm = (form, { includeImages = false } = {}) => {
+export const validateHousingForm = (
+  form,
+  { includeImages = false, uploadedImageCount = 0 } = {}
+) => {
   const price = Number(form.price)
   const availableRooms = Number(form.available_rooms)
   const imageUrls = parseImageUrls(form.image_urls)
+  const totalImages = imageUrls.length + uploadedImageCount
 
   return firstError(
     isBlank(form.title) ? 'Title is required' : '',
@@ -228,12 +232,12 @@ export const validateHousingForm = (form, { includeImages = false } = {}) => {
       ? 'Available rooms must be at least 1 when status is available'
       : '',
     !['available', 'unavailable'].includes(form.status) ? 'Status must be available or unavailable' : '',
-    includeImages && imageUrls.length > 20 ? 'Image URLs must contain at most 20 items' : '',
+    includeImages && totalImages > 20 ? 'You can add at most 20 images in total' : '',
     includeImages && imageUrls.some((url) => !isValidUrlLike(url)) ? 'Image URLs must be valid URLs or local paths' : ''
   )
 }
 
-export const buildHousingPayload = (form, { includeImages = false } = {}) => {
+export const buildHousingPayload = (form, { includeImages = false, extraImageUrls = [] } = {}) => {
   const payload = {
     title: String(form.title || '').trim(),
     description: String(form.description || '').trim(),
@@ -246,7 +250,7 @@ export const buildHousingPayload = (form, { includeImages = false } = {}) => {
   }
 
   if (includeImages) {
-    payload.image_urls = parseImageUrls(form.image_urls)
+    payload.image_urls = [...parseImageUrls(form.image_urls), ...extraImageUrls]
   }
 
   return payload
