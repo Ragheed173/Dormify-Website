@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom'
-
+import { resolveImageUrl } from '../utils/imageUrl'
 function HousingCard({ housing }) {
   const navigate = useNavigate()
 
-  const imageUrl =
+  const imageUrl = resolveImageUrl(
     housing?.HousingImages?.[0]?.image_url ||
-    'https://via.placeholder.com/600x400?text=No+Image'
-
+      'https://via.placeholder.com/600x400?text=No+Image'
+  )
   return (
     <div
       className="card h-100 shadow-sm border-0"

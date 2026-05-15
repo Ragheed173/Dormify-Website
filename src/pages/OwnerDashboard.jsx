@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import api from '../api/axiosInstance'
 import { Link, useNavigate } from 'react-router-dom'
@@ -7,6 +7,7 @@ import {
   validateHousingForm,
   validateProfileForm,
 } from '../utils/validation'
+import { resolveImageUrl } from '../utils/imageUrl'
 
 function OwnerDashboard() {
   const { user, logout } = useAuth()
@@ -46,6 +47,9 @@ function OwnerDashboard() {
   }
 
   const [housingForm, setHousingForm] = useState(emptyHousingForm)
+  const [housingImageFiles, setHousingImageFiles] = useState([])
+  const housingImageFilesRef = useRef(housingImageFiles)
+  housingImageFilesRef.current = housingImageFiles
   const [editingHousingId, setEditingHousingId] = useState(null)
 
   const fetchOwnerData = async () => {
@@ -81,6 +85,16 @@ function OwnerDashboard() {
 
   useEffect(() => {
     fetchOwnerData()
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      housingImageFilesRef.current.forEach((item) => {
+        if (item.previewUrl) {
+          URL.revokeObjectURL(item.previewUrl)
+        }
+      })
+    }
   }, [])
 
   const totalRevenue = useMemo(() => {
@@ -161,15 +175,65 @@ function OwnerDashboard() {
     }
   }
 
+  const clearHousingImageFiles = () => {
+    housingImageFiles.forEach((file) => {
+      if (file.previewUrl) {
+        URL.revokeObjectURL(file.previewUrl)
+      }
+    })
+    setHousingImageFiles([])
+  }
+
   const resetHousingForm = () => {
     setHousingForm(emptyHousingForm)
+    clearHousingImageFiles()
     setEditingHousingId(null)
+  }
+
+  const handleHousingImageFilesChange = (e) => {
+    const selectedFiles = Array.from(e.target.files || [])
+    e.target.value = ''
+
+    if (selectedFiles.length === 0) return
+
+    const nextFiles = selectedFiles.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }))
+
+    setHousingImageFiles((prev) => [...prev, ...nextFiles])
+  }
+
+  const handleRemoveHousingImageFile = (index) => {
+    setHousingImageFiles((prev) => {
+      const removed = prev[index]
+      if (removed?.previewUrl) {
+        URL.revokeObjectURL(removed.previewUrl)
+      }
+      return prev.filter((_, itemIndex) => itemIndex !== index)
+    })
+  }
+
+  const uploadHousingImageFiles = async (files) => {
+    if (files.length === 0) return []
+
+    const formData = new FormData()
+    files.forEach((item) => {
+      formData.append('images', item.file)
+    })
+
+    const res = await api.post('/owner/housings/upload-images', formData)
+
+    return res.data?.data?.urls || []
   }
 
   const handleHousingSubmit = async (e) => {
     e.preventDefault()
 
-    const validationError = validateHousingForm(housingForm, { includeImages: true })
+    const validationError = validateHousingForm(housingForm, {
+      includeImages: true,
+      uploadedImageCount: housingImageFiles.length,
+    })
     if (validationError) {
       setError(validationError)
       setSuccess('')
@@ -181,7 +245,11 @@ function OwnerDashboard() {
       setError('')
       setSuccess('')
 
-      const payload = buildHousingPayload(housingForm, { includeImages: true })
+      const uploadedUrls = await uploadHousingImageFiles(housingImageFiles)
+      const payload = buildHousingPayload(housingForm, {
+        includeImages: true,
+        extraImageUrls: uploadedUrls,
+      })
 
       if (editingHousingId) {
         await api.put(`/owner/housings/${editingHousingId}`, payload)
@@ -201,6 +269,7 @@ function OwnerDashboard() {
   }
 
   const handleEditHousing = (housing) => {
+    clearHousingImageFiles()
     setEditingHousingId(housing.id)
     setHousingForm({
       title: housing.title || '',
@@ -580,7 +649,44 @@ function OwnerDashboard() {
               </div>
 
               <div className="col-12">
-                <label className="form-label">Image URLs</label>
+                <label className="form-label">Upload images from device</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleHousingImageFilesChange}
+                />
+                <div className="form-text">
+                  JPG, PNG, GIF, or WebP. Max 5 MB per image. Up to 20 images total (including URLs below).
+                </div>
+                {housingImageFiles.length > 0 && (
+                  <div className="d-flex flex-wrap gap-2 mt-3">
+                    {housingImageFiles.map((item, index) => (
+                      <div key={`${item.file.name}-${index}`} className="position-relative">
+                        <img
+                          src={item.previewUrl}
+                          alt={item.file.name}
+                          className="rounded border"
+                          style={{ width: '96px', height: '96px', objectFit: 'cover' }}
+                        />
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-danger position-absolute top-0 end-0"
+                          style={{ transform: 'translate(25%, -25%)' }}
+                          onClick={() => handleRemoveHousingImageFile(index)}
+                          aria-label="Remove image"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-12">
+                <label className="form-label">Image URLs (optional)</label>
                 <textarea
                   name="image_urls"
                   className="form-control"
@@ -630,10 +736,10 @@ function OwnerDashboard() {
                 <div key={housing.id} className="col-12 col-md-6">
                   <div className="card border shadow-sm h-100">
                     <img
-                      src={
+                      src={resolveImageUrl(
                         housing.HousingImages?.[0]?.image_url ||
-                        'https://via.placeholder.com/600x300?text=No+Image'
-                      }
+                          'https://via.placeholder.com/600x300?text=No+Image'
+                      )}
                       alt={housing.title}
                       className="w-100"
                       style={{

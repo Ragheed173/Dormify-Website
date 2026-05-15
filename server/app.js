@@ -1,4 +1,5 @@
 const express = require("express")
+const path = require("path")
 const cors = require("cors")
 const session = require("express-session")
 const swaggerUi = require("swagger-ui-express")
@@ -18,6 +19,9 @@ const errorMiddleware = require("./middleware/errorMiddleware")
 const AppError = require("./utils/AppError")
 
 const app = express()
+
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 const allowedOrigins = new Set([
   process.env.FRONTEND_URL || "http://localhost:5173",

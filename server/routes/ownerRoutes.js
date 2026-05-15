@@ -5,6 +5,7 @@ const ownerController = require("../controllers/ownerController");
 const authMiddleware = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 const validateRequest = require("../middleware/validateRequest");
+const uploadHousingImages = require("../middleware/uploadHousingImages");
 const asyncHandler = require("../utils/asyncHandler");
 const schemas = require("../validators/schemas");
 
@@ -18,6 +19,11 @@ router.put(
 );
 
 router.get("/housings", asyncHandler(ownerController.getOwnerHousings));
+router.post(
+  "/housings/upload-images",
+  uploadHousingImages,
+  asyncHandler(ownerController.uploadOwnerHousingImages)
+);
 router.post(
   "/housings",
   validateRequest(schemas.housingBody(true)),

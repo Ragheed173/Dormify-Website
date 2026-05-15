@@ -1,4 +1,17 @@
 const errorMiddleware = (err, req, res, next) => {
+  if (err.name === "MulterError") {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "Each image must be 5 MB or smaller"
+        : err.code === "LIMIT_FILE_COUNT"
+          ? "You can upload at most 20 images at once"
+          : err.message;
+
+    return res.status(400).json({
+      message,
+      code: err.code,
+    });
+  }
   const isSequelizeValidation =
     err.name === "SequelizeValidationError" || err.name === "SequelizeUniqueConstraintError";
 
@@ -41,7 +54,6 @@ const errorMiddleware = (err, req, res, next) => {
     console.error(err);
   }
 
-  // Local debugging: MySQL errors often lack err.code on the outer Error; show sqlMessage in JSON.
   if (
     statusCode >= 500 &&
     isSequelizeDb &&

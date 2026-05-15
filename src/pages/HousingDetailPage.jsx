@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../api/axiosInstance";
 import { validateBookingForm } from "../utils/validation";
+import { resolveImageUrl } from "../utils/imageUrl";
 
 function HousingDetailPage() {
   const { id } = useParams();
@@ -35,9 +36,10 @@ function HousingDetailPage() {
 
         setHousing(housingData);
 
-        const firstImage =
+        const firstImage = resolveImageUrl(
           housingData?.HousingImages?.[0]?.image_url ||
-          "https://via.placeholder.com/1200x700?text=No+Image";
+            "https://via.placeholder.com/1200x700?text=No+Image"
+        );
         setSelectedImage(firstImage);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load housing details");
@@ -53,7 +55,7 @@ function HousingDetailPage() {
     if (!housing?.HousingImages?.length) {
       return ["https://via.placeholder.com/1200x700?text=No+Image"];
     }
-    return housing.HousingImages.map((img) => img.image_url);
+    return housing.HousingImages.map((img) => resolveImageUrl(img.image_url));
   }, [housing]);
 
   const handleChange = (e) => {

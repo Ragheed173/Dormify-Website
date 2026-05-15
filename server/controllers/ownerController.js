@@ -213,7 +213,22 @@ const updateOwnerHousing = async (req, res, next) => {
     return next(error)
   }
 }
+const uploadOwnerHousingImages = async (req, res, next) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      throw new AppError('No images uploaded', 400, 'VALIDATION_ERROR')
+    }
 
+    const urls = req.files.map((file) => `/uploads/housings/${file.filename}`)
+
+    return res.status(200).json({
+      message: 'Images uploaded successfully',
+      data: { urls },
+    })
+  } catch (error) {
+    return next(error)
+  }
+}
 const deleteOwnerHousing = async (req, res, next) => {
   try {
     const { id } = req.params
@@ -298,6 +313,7 @@ module.exports = {
   getOwnerHousings,
   createOwnerHousing,
   updateOwnerHousing,
+  uploadOwnerHousingImages,
   deleteOwnerHousing,
   getOwnerBookings,
   updateOwnerBookingStatus,
