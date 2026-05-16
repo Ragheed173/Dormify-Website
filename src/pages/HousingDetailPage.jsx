@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../api/axiosInstance";
+import { useAuth } from "../context/AuthContext";
 import { validateBookingForm } from "../utils/validation";
 import { resolveImageUrl } from "../utils/imageUrl";
 
 function HousingDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [housing, setHousing] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,6 +26,7 @@ function HousingDetailPage() {
   });
 
   const token = localStorage.getItem("token");
+  const role = user?.role || "student";
 
   useEffect(() => {
     const fetchHousing = async () => {
@@ -282,25 +285,28 @@ function HousingDetailPage() {
               className="card border-0 shadow-sm position-sticky"
               style={{ top: "90px", borderRadius: "16px" }}
             >
+
               <div className="card-body p-4">
-                <div className="mb-4">
-                  <h4 className="fw-bold mb-1">Book this housing</h4>
-                  <p className="text-muted small mb-0">
-                    Choose your dates and send your booking request.
-                  </p>
-                </div>
+                {canBook ? (
+                  <>
+                    <div className="mb-4">
+                      <h4 className="fw-bold mb-1">Book this housing</h4>
+                      <p className="text-muted small mb-0">
+                        Choose your dates and send your booking request.
+                      </p>
+                    </div>
 
-                {!token && (
-                  <div className="alert alert-warning small">
-                    You need to{" "}
-                    <Link to="/login" className="fw-semibold">
-                      log in
-                    </Link>{" "}
-                    before booking.
-                  </div>
-                )}
+                    {!token && (
+                      <div className="alert alert-warning small">
+                        You need to{" "}
+                        <Link to="/login" className="fw-semibold">
+                          log in
+                        </Link>{" "}
+                        before booking.
+                      </div>
+                    )}
 
-                <form onSubmit={handleBooking}>
+                    <form onSubmit={handleBooking}>
                   <div className="mb-3">
                     <label className="form-label fw-medium">Start Date</label>
                     <input
@@ -349,6 +355,16 @@ function HousingDetailPage() {
                       : "Book Now"}
                   </button>
                 </form>
+                <hr className="my-4" />
+                  </>
+                ) : (
+                  <div className="mb-4">
+                    <h4 className="fw-bold mb-1">Housing details</h4>
+                    <p className="text-muted small mb-0">
+                      Booking is available to students only. Manage booking requests from your dashboard.
+                    </p>
+                  </div>
+                )}
 
                 <hr className="my-4" />
 
