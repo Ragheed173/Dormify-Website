@@ -27,6 +27,7 @@ function HousingDetailPage() {
 
   const token = localStorage.getItem("token");
   const role = user?.role || "student";
+  const canBook = role === "student";
 
   useEffect(() => {
     const fetchHousing = async () => {
